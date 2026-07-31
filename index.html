@@ -5130,7 +5130,7 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
   <!-- Inizio Footer di Progetto -->
 <div class="project-info" style="font-size: 0.85em; text-align: center; color: #555555;">
     <div>
-        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev22.27 • SENZA Accesso • 28/07/2026]
+        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev22.30 • SENZA Accesso • 31/07/2026]
     </div>
 
     <div style="margin-top: 3px;">
@@ -34401,13 +34401,27 @@ function clearGeocode() {
 //         · "[T1] [RC] [A1]" (Unificato + A1) · "[RC] [DC]" (solo RC + DC)
 // ═══════════════════════════════════════════════════════════════════════════
 window._rcClliSetCache = null;
+window._rcClliSetSourceIsStable = false;
 function getRCClliSetCached() {
-  if (window._rcClliSetCache) return window._rcClliSetCache;
+  // ATTENZIONE: window.NODES NON è una fonte stabile di dati RC — al cambio DB
+  // (switchDatabase) il suo contenuto viene svuotato e riempito con i dati del
+  // DB attivo (RA o Unificato), quindi cache basata su window.NODES diventava
+  // sbagliata per sempre se costruita mentre era già attivo un DB diverso da RC
+  // (causava falsi [RC] su centrali solo RA, es. GIGNOD/AOSTITAC, GRESSAN/AOSTITAF).
+  // Fonte stabile: window.DB_STATE.db1_nodes, uno snapshot dei soli dati RC
+  // originali salvato una volta per tutte al primo caricamento del DB RA, che
+  // non cambia più dopo, indipendentemente dai cambi di DB successivi.
+  var isStableAvailable = !!(window.DB_STATE && Array.isArray(window.DB_STATE.db1_nodes) && window.DB_STATE.db1_nodes.length);
+
+  if (window._rcClliSetCache && window._rcClliSetSourceIsStable) return window._rcClliSetCache;
+
+  var sourceArr = isStableAvailable ? window.DB_STATE.db1_nodes : window.NODES;
   var s = new Set();
-  if (Array.isArray(window.NODES)) {
-    window.NODES.forEach(function(r) { if (r && r.clli) s.add(String(r.clli).toUpperCase()); });
+  if (Array.isArray(sourceArr)) {
+    sourceArr.forEach(function(r) { if (r && r.clli) s.add(String(r.clli).toUpperCase()); });
   }
   window._rcClliSetCache = s;
+  window._rcClliSetSourceIsStable = isStableAvailable;
   return s;
 }
 
@@ -36727,7 +36741,25 @@ function findNearestCentrals() {
 
   const clientPos = [lat, lon];
 
-  const distances = window.NODES
+  // VINCOLO: le centrali RA di TipoSede 3 (T3) sono solo di passaggio e non
+  // vanno MAI considerate come "centrale più vicina" — sia con DB RA attivo
+  // sia per la parte RA quando è attivo il DB Unificato. I nodi RC non hanno
+  // il campo TipoSede, quindi questo filtro non li tocca in nessun caso.
+  const t3Filtered = window.NODES.filter(node => Number(node.TipoSede) !== 3);
+
+  // Deduplica per CLLI: garantisce che ogni centrale fisica compaia una sola
+  // volta nel risultato, anche se il DB attivo dovesse contenere più voci con
+  // lo stesso CLLI (es. dopo più cambi di DB nella stessa sessione).
+  const seenClli = new Set();
+  const candidateNodes = [];
+  t3Filtered.forEach(node => {
+    const key = String(node.clli || node.id || node.name || '').toUpperCase();
+    if (key && seenClli.has(key)) return;
+    if (key) seenClli.add(key);
+    candidateNodes.push(node);
+  });
+
+  const distances = candidateNodes
     .map(node => {
       if (typeof node.lat !== 'number' || typeof node.lon !== 'number') {
         return null;
@@ -222333,6 +222365,19 @@ const roadRoute = L.polyline(coords, {
       <p><strong>NAT (National Topography) Italia</strong> è uno strumento professionale di visualizzazione, analisi e gestione delle reti nazionali italiane di telecomunicazioni DWDM. Progettato per ingegneri, tecnici e manager che operano nell'ambito delle infrastrutture di rete backbone (RC) e access (RA).</p>
 
       <div class="guide-highlight">
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.30 (31/07/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Fix etichette combinate tooltip: alcune centrali SOLO RA venivano etichettate erroneamente anche [RC] (es. GIGNOD/AOSTITAC, GRESSAN/AOSTITAF)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Causa: il controllo "è presente anche su RC?" usava window.NODES, che pero' cambia contenuto ad ogni cambio DB (RA/Unificato) — se la cache veniva costruita mentre non era attivo il DB RC, restava sbagliata per sempre<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Ora usa window.DB_STATE.db1_nodes, uno snapshot stabile dei soli dati RC che non cambia mai dopo il primo caricamento del DB RA, indipendentemente dai cambi di DB successivi<br/><br/>
+
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.29 (31/07/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Fix "Centrali più vicine": stessa centrale (stesso CLLI) poteva comparire due volte nel risultato (es. "AOSTA" due volte alla stessa distanza)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Aggiunta deduplica esplicita per CLLI subito dopo il filtro T3: ogni centrale fisica compare ora una sola volta nel risultato, indipendentemente da eventuali voci duplicate presenti nel DB attivo al momento della ricerca<br/><br/>
+
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.28 (31/07/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• "Centrali più vicine": aggiunto vincolo di esclusione delle centrali RA di TipoSede 3 (T3, solo di passaggio) dal calcolo — non vengono mai proposte come centrale più vicina, né con DB RA attivo né per la parte RA del DB Unificato. La parte RC resta invariata (non ha campo TipoSede)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• La funzione era già correttamente sensibile al DB attivo com'era: nessuna modifica alla logica di sorgente dati, solo aggiunto il filtro T3<br/><br/>
+
         <p><strong>🆕 NOVITÀ VERSIONE Rev22.27 (28/07/2026):</strong><br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Corretta la logica delle etichette combinate nel tooltip centrali: ora dipende dal DB attivo<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- Solo DB RA: mostra TUTTI i TipoSede della centrale (es. "[T1] [T3]"), mai [RC]<br/>
