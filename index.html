@@ -3,7 +3,7 @@
 <!--
 ╔═════════════════════════════════════════════════════════════════════════════════╗
 ║                        NAT ITALIA - INDICE DEL FILE                             ║
-║                        Rev. 22.16 - Struttura Organizzata                       ║
+║                        Rev. 26.09.01 - Struttura Organizzata                    ║
 ╠═════════════════════════════════════════════════════════════════════════════════╣
 ║                                                                                 ║
 ║  📋 INDICE SEZIONI (per ricerca veloce usare Ctrl+F):                           ║
@@ -20,9 +20,13 @@
 ║  │ [CSS-007] Pannelli Speciali (COLT/Info)   → cerca: [CSS-007]               │ ║
 ║  │ [CSS-008] App Alert Modal                 → cerca: [CSS-008]               │ ║
 ║  │ [CSS-009] Stili CRO Routes                → cerca: [CSS-009]               │ ║
+║  │ [CSS-010] Restyling grafico stile CRO     → cerca: [CSS-010]               │ ║
+║  │ [CSS-011] Rifiniture grafiche             → cerca: [CSS-011]               │ ║
+║  │ [JS-011] Ricerca Indirizzo comprimibile   → cerca: [JS-011]                │ ║
 ║  ├────────────────────────────────────────────────────────────────────────────┤ ║
 ║  │ [JS-001] Toast System                     → cerca: [JS-001]                │ ║
 ║  │ [JS-002] Responsive Layout                → cerca: [JS-002]                │ ║
+║  │ [JS-010] Sezioni comprimibili / zebra     → cerca: [JS-010]                │ ║
 ║  └────────────────────────────────────────────────────────────────────────────┘ ║
 ║                                                                                 ║
 ║  ┌────────────────────────────────────────────────────────────────────────────┐ ║
@@ -2606,7 +2610,7 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
     }
     
     .geocode-header-btn:hover {
-      background: #d5d7db;  /* ← Cambia questo per cambiare colore dei bottoni (rgba(255,255,255,0.3))
+      background: #d5d7db;  /* ← Cambia questo per cambiare colore dei bottoni (rgba(255,255,255,0.3)) */
       border-color: rgba(255,255,255,0.5);
 	  color: #535b66;  /* Aggiungi questa riga per mantenere il colore di sopra */
     }
@@ -3092,12 +3096,23 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
       font-weight: 600;}
 
 /* Stato ATTIVO per le 3 aree (colori pastello allineati agli altri bottoni) */
-.area-toggle-row .area-toggle input[data-area="NORD"]:checked + span {
+.area-toggle-row .area-toggle input[data-area="NORD"]:checked + span,
+.area-toggle-row .area-toggle input[data-area="NORD OVEST"]:checked + span,
+.area-toggle-row .area-toggle input[data-area="NORD EST"]:checked + span {
   background: #DBEAFE; /* come bottone "Select" (azzurro pastello) */
   border-color: #93C5FD;
 }
-.area-toggle-row .area-toggle input[data-area="NORD"]:checked + span:hover {
+.area-toggle-row .area-toggle input[data-area="NORD"]:checked + span:hover,
+.area-toggle-row .area-toggle input[data-area="NORD OVEST"]:checked + span:hover,
+.area-toggle-row .area-toggle input[data-area="NORD EST"]:checked + span:hover {
   background: #BFDBFE; /* hover leggermente più scuro */
+}
+/* Con quattro bottoni la riga puo' andare stretta: la lascio andare a capo */
+.area-toggle-row {
+  flex-wrap: wrap;
+}
+.area-toggle-row .area-toggle {
+  min-width: 76px;
 }
 
 
@@ -4639,6 +4654,332 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
     }
     .btn-routing:hover { background: #cde0f5; }
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   [CSS-010] RESTYLING GRAFICO ALLINEATO A CRO ITALIA  (Rev 22.31)
+   1. palette chiara "fredda": superfici abbassate, fondo pagina alzato
+   2. sezioni comprimibili con stato memorizzato
+   3. liste Collegamenti / Centrali zebrate + evidenza al passaggio del mouse
+   4. forme squadrate: bottoni, campi, pastiglie 6 px - schede 10 px
+   Tutte le regole sono scritte sotto body:not(.dark-mode) o con selettori
+   dedicati, cosi' un eventuale tema scuro futuro resta indipendente.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. PALETTE ─────────────────────────────────────────────────────────────── */
+body:not(.dark-mode) {
+  --gray-50:  #e8edf4;
+  --gray-100: #dee5ef;
+  --gray-200: #cfd8e4;
+  --gray-300: #c4ccda;
+  --gray-400: #98a2b3;
+  --gray-500: #667085;
+  --gray-600: #475467;
+  --gray-700: #344054;
+  --gray-800: #1d2939;
+  --gray-900: #101828;
+
+  --nat-surface:  #f7f9fc;   /* schede, liste, barre */
+  --nat-page-bg:  #dde4ee;   /* fondo pagina */
+  --nat-input-bg: #fdfefe;   /* campi di inserimento */
+  --nat-row-even: #eef2f8;   /* righe pari delle liste */
+  --nat-row-head: #e3eaf4;   /* intestazioni di tabella */
+  --nat-hover:    #e0e7ff;   /* evidenza al passaggio del mouse */
+  --nat-border:   #cfd8e4;
+  --nat-text:     #1d2939;
+}
+
+html,
+body:not(.dark-mode) {
+  background: #dde4ee;
+}
+body:not(.dark-mode) {
+  color: #1d2939;
+}
+
+body:not(.dark-mode) .sidebar {
+  background: #e8edf4;
+  border-right-color: #c4ccda;
+}
+
+body:not(.dark-mode) .box {
+  background: #f7f9fc;
+  border-color: #cfd8e4;
+  border-radius: 10px;
+}
+body:not(.dark-mode) .box .box {
+  background: #eef2f8;
+}
+
+body:not(.dark-mode) .list {
+  background: #f7f9fc;
+  border-color: #cfd8e4;
+  border-radius: 10px;
+}
+
+body:not(.dark-mode) .pill,
+body:not(.dark-mode) .pill-nodes,
+body:not(.dark-mode) .pill-links {
+  background: #e3eaf4;
+  border-color: #c4ccda;
+}
+
+body:not(.dark-mode) .project-info {
+  border-top-color: #c4ccda;
+}
+
+/* Campi di inserimento: quasi bianchi, bianco pieno al focus */
+body:not(.dark-mode) .links-header input[type="text"],
+body:not(.dark-mode) .sidebar input[type="text"],
+body:not(.dark-mode) .sidebar input[type="search"],
+body:not(.dark-mode) .sidebar input[type="number"],
+body:not(.dark-mode) .sidebar select,
+body:not(.dark-mode) .sidebar textarea {
+  background: #fdfefe;
+  border: 1px solid #c4ccda;
+  color: #1d2939;
+}
+body:not(.dark-mode) .links-header input[type="text"]:focus,
+body:not(.dark-mode) .sidebar input[type="text"]:focus,
+body:not(.dark-mode) .sidebar input[type="search"]:focus,
+body:not(.dark-mode) .sidebar input[type="number"]:focus,
+body:not(.dark-mode) .sidebar select:focus,
+body:not(.dark-mode) .sidebar textarea:focus {
+  background: #ffffff;
+  border-color: var(--tim-blue);
+}
+
+/* Pannello di routing sulla stessa scala di superfici */
+body:not(.dark-mode) #routing-panel {
+  background: #f7f9fc;
+}
+body:not(.dark-mode) #routing-panel-footer {
+  background: #eef2f8;
+  border-top-color: #cfd8e4;
+}
+
+/* ── 2. SEZIONI COMPRIMIBILI ────────────────────────────────────────────────── */
+.box.nat-collapsible > .nat-sec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  margin: 0;
+}
+.box.nat-collapsible:not(.nat-collapsed) > .nat-sec-header {
+  margin-bottom: 6px;
+}
+.box.nat-collapsed > *:not(.nat-sec-header) {
+  display: none !important;
+}
+.box.nat-collapsed .nat-hide-collapsed {
+  display: none !important;
+}
+
+.nat-sec-toggle {
+  flex-shrink: 0;
+  min-width: 72px;              /* misura identica fra "Comprimi" ed "Espandi" */
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid #c4ccda;
+  background: #e8edf4;
+  color: #344054;
+  cursor: pointer;
+}
+.nat-sec-toggle:hover {
+  background: #dde4ee;
+  border-color: #98a2b3;
+}
+
+/* ── 3. LISTE ZEBRATE + EVIDENZA AL PASSAGGIO DEL MOUSE ─────────────────────── */
+body:not(.dark-mode) #links-list .list-item,
+body:not(.dark-mode) #nodes-list .node-item {
+  border-bottom: 1px solid #dee5ef;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+/* alternanza assegnata da JavaScript, non con nth-child */
+body:not(.dark-mode) #links-list .list-item.nat-row-odd,
+body:not(.dark-mode) #nodes-list .node-item.nat-row-odd {
+  background-color: #f7f9fc;
+}
+body:not(.dark-mode) #links-list .list-item.nat-row-even,
+body:not(.dark-mode) #nodes-list .node-item.nat-row-even {
+  background-color: #eef2f8;
+}
+
+/* Il velo del passaggio del mouse usa background-image: le righe selezionate
+   hanno un background-color scritto sull'elemento e altrimenti coprirebbe. */
+body:not(.dark-mode) #links-list .list-item:hover,
+body:not(.dark-mode) #nodes-list .node-item:hover,
+body:not(.dark-mode) .list .list-item:hover,
+body:not(.dark-mode) .list .node-item:hover {
+  background-color: #e0e7ff;
+  background-image: linear-gradient(#e0e7ff, #e0e7ff) !important;
+  transform: none !important;
+}
+body:not(.dark-mode) .rp-item:hover {
+  background-image: linear-gradient(#e0e7ff, #e0e7ff);
+}
+
+/* ── 4. FORME SQUADRATE ─────────────────────────────────────────────────────── */
+body:not(.dark-mode) .links-header input[type="text"],
+body:not(.dark-mode) .links-header button,
+body:not(.dark-mode) .pill,
+body:not(.dark-mode) .badge,
+body:not(.dark-mode) .db-btn,
+body:not(.dark-mode) .design-tab-btn,
+body:not(.dark-mode) .btn-selection,
+body:not(.dark-mode) .panel-btn,
+body:not(.dark-mode) .info-panel-btn,
+body:not(.dark-mode) .zones-toggle-row .zone-toggle,
+body:not(.dark-mode) .area-toggle-row .area-toggle span {
+  border-radius: 6px !important;
+}
+body:not(.dark-mode) .sidebar button,
+body:not(.dark-mode) .sidebar select,
+body:not(.dark-mode) .sidebar textarea,
+body:not(.dark-mode) .sidebar input:not([type="checkbox"]):not([type="radio"]) {
+  border-radius: 6px;
+}
+/* Restano tondi i cerchi veri (larghi quanto alti) */
+body:not(.dark-mode) .tracker-marker,
+body:not(.dark-mode) .db-loading-spinner,
+body:not(.dark-mode) .ripple-effect {
+  border-radius: 50% !important;
+}
+/* fine [CSS-010] */
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   [CSS-011] RIFINITURE GRAFICHE  (Rev 22.32)
+   - comando Comprimi/Espandi con la stessa veste in tutte le schede
+   - Guida: dissolvenza in entrata e in uscita
+   - pannello Percorsi CRO squadrato
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* Nella scheda "Filtra per Zona" il comando sta dentro .links-header, che ha uno
+   sfondo bottone piu' scuro: qui lo riporto alla veste delle altre due schede. */
+.nat-sec-toggle,
+.links-header .nat-sec-toggle,
+.box.nat-collapsible > .nat-sec-header .nat-sec-toggle {
+  background: #e8edf4 !important;
+  border: 1px solid #c4ccda !important;
+  color: #344054 !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+}
+.nat-sec-toggle:hover,
+.links-header .nat-sec-toggle:hover,
+.box.nat-collapsible > .nat-sec-header .nat-sec-toggle:hover {
+  background: #dde4ee !important;
+  border-color: #98a2b3 !important;
+}
+
+/* Guida: allo scorrimento laterale gia' presente aggiungo la dissolvenza */
+#guide-panel {
+  opacity: 0;
+  transition: right 0.35s ease, opacity 0.35s ease;
+}
+#guide-panel.open {
+  opacity: 1;
+}
+#guide-overlay {
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+/* Pannello Percorsi CRO: niente ovali */
+#cro-routes-panel button,
+#cro-routes-panel .cro-pill-btn,
+#cro-routes-panel .cro-badge,
+#cro-routes-panel .cro-route-btn,
+#cro-routes-panel .cro-action-btn,
+#cro-routes-panel .cro-type-badge,
+#cro-routes-panel .cro-panel-btn,
+#cro-routes-panel select,
+#cro-routes-panel input:not([type="checkbox"]):not([type="radio"]) {
+  border-radius: 6px !important;
+}
+#cro-routes-panel .cro-route-toggle,
+#cro-routes-panel .cro-link-toggle {
+  border-radius: 4px !important;
+}
+#cro-routes-panel .cro-route-toggle::after,
+#cro-routes-panel .cro-link-toggle::after {
+  border-radius: 2px !important;
+}
+#cro-routes-panel .cro-links-section,
+#cro-routes-panel .cro-route-color {
+  border-radius: 4px !important;
+}
+
+/* Finestra dei dettagli percorso aperta dal pannello */
+.cro-info-modal-content {
+  border-radius: 10px !important;
+}
+.cro-info-modal-content button,
+.cro-info-modal-content .cro-pill-btn,
+.cro-info-modal-content .cro-type-badge {
+  border-radius: 6px !important;
+}
+
+/* Pannello "Ricerca Indirizzo" comprimibile */
+.geocode-control.nat-collapsed .geocode-content {
+  display: none !important;
+}
+.geocode-control.nat-collapsed .geocode-header {
+  border-bottom: none;
+  border-radius: 5px;
+}
+.geocode-header-btn.nat-geo-toggle {
+  min-width: 68px;
+  text-align: center;
+  font-size: 10.5px;
+  border-radius: 6px !important;
+  flex-shrink: 0;
+}
+/* Da chiuso il bottone informazioni non serve: aprirebbe un riquadro nascosto */
+.geocode-control.nat-collapsed #geocode-info-toggle-btn {
+  display: none !important;
+}
+.geocode-control.nat-collapsed .geocode-header-title {
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+/* ── Colonna di sinistra ingrandita ──────────────────────────────────────────
+   Corrisponde a portare il browser al 120% sulla sola colonna di sinistra.
+   Per cambiare la misura basta toccare --nat-sidebar-zoom qui sotto.
+   Sotto i 1025 px di larghezza l'ingrandimento non si applica, altrimenti la
+   colonna mangerebbe la mappa sugli schermi piccoli. */
+:root {
+  --nat-sidebar-zoom: 1.2;
+}
+@media (min-width: 1025px) {
+  body:not(.dark-mode) .sidebar {
+    zoom: var(--nat-sidebar-zoom);
+    max-height: calc((100vh - 20px) / 1.2);
+  }
+  .sidebar-toggle {
+    left: calc(var(--sidebar-width) * var(--nat-sidebar-zoom));
+  }
+  body.sidebar-collapsed .sidebar-toggle {
+    left: calc(var(--sidebar-width-collapsed) * var(--nat-sidebar-zoom));
+  }
+}
+/* fine [CSS-011] */
+
+
 </style>
 
 <!-- ══════════════════════════════════════════════════════════════════════════════
@@ -4954,12 +5295,16 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
     </div>
   </div>
 
-<div class="box">
+<div class="box" id="nat-box-area">
     <h2>🏞️ Filtra per Area</h2>
     <div class="area-toggle-row">
       <label class="area-toggle">
-        <input type="checkbox" class="area-filter" data-area="NORD" checked />
-        <span>NORD</span>
+        <input type="checkbox" class="area-filter" data-area="NORD OVEST" checked />
+        <span>NORD OVEST</span>
+      </label>
+      <label class="area-toggle">
+        <input type="checkbox" class="area-filter" data-area="NORD EST" checked />
+        <span>NORD EST</span>
       </label>
       <label class="area-toggle">
         <input type="checkbox" class="area-filter" data-area="CENTRO" checked />
@@ -4972,10 +5317,10 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
     </div>
   </div>
 
-<div class="box">
+<div class="box" id="nat-box-zona">
     <div class="links-header">
   <span class="small"><strong>🔲 Filtra per Zona</strong></span>
-  <span style="display: flex; gap: 4px;">
+  <span class="nat-hide-collapsed" style="display: flex; gap: 4px;">
     <button id="zones-select-all" title="Seleziona tutto (tutte le zone)">Tutto</button>
     <button id="zones-select-none" title="Azzera la selezione delle zone">Azzera</button>
   </span>
@@ -5055,7 +5400,7 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
   </div>
   </div>
 
-  <div class="box controls">
+  <div class="box controls" id="nat-box-controlli">
     <h2>🕹️ Controlli mappa</h2>
   <label>
     <input type="checkbox" id="toggle-clli-labels" />
@@ -5130,7 +5475,7 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
   <!-- Inizio Footer di Progetto -->
 <div class="project-info" style="font-size: 0.85em; text-align: center; color: #555555;">
     <div>
-        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev22.30 • SENZA Accesso • 31/07/2026]
+        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev26.09.01 • SENZA Accesso • 01/09/2026]
     </div>
 
     <div style="margin-top: 3px;">
@@ -32972,8 +33317,40 @@ function updateZoneLabels() {
 }
 
   // --- Gestione filtri per Area (NORD / CENTRO / SUD) ---
-  const ALL_AREAS = ['NORD', 'CENTRO', 'SUD'];
+  const ALL_AREAS = ['NORD OVEST', 'NORD EST', 'CENTRO', 'SUD'];
   let activeAreas = new Set(ALL_AREAS);
+
+  // Il NORD del database viene diviso in due macro-aree solo qui, al momento
+  // del filtro e della visualizzazione: i dati non vengono modificati.
+  //   NORD OVEST -> PV (Piemonte, V.Aosta), LO / MILO (Lombardia), LI (Liguria)
+  //   NORD EST   -> NE (Trentino, Veneto, Friuli), ER (Emilia Romagna)
+  const ZONE_NORD_OVEST = new Set(['PV', 'LO', 'MILO', 'LI']);
+  const ZONE_NORD_EST   = new Set(['NE', 'ER']);
+
+  function areaEffettiva(x) {
+    if (!x) return null;
+    const grezza = x.area || x.Area;
+    if (!grezza) return null;
+    const a = String(grezza).toUpperCase().trim();
+    if (a !== 'NORD') return a;
+    const zGrezza = x.zona || x.Zona;
+    const z = zGrezza ? String(zGrezza).toUpperCase().trim() : '';
+    if (ZONE_NORD_OVEST.has(z)) return 'NORD OVEST';
+    if (ZONE_NORD_EST.has(z))   return 'NORD EST';
+    return 'NORD';   // zona del nord non prevista: resta generica
+  }
+
+  function isAreaActive(x) {
+    const a = areaEffettiva(x);
+    if (!a) return true;                       // senza area il filtro non si applica
+    if (a === 'NORD') {                        // non classificata: basta una delle due
+      return activeAreas.has('NORD OVEST') || activeAreas.has('NORD EST');
+    }
+    return activeAreas.has(a);
+  }
+
+  window.areaEffettiva = areaEffettiva;
+  window.isAreaActive = isAreaActive;
 
   // Funzione colore stato
   function getStatoColor(stato) {
@@ -33176,7 +33553,25 @@ function updateZoneLabels() {
 	
 // Vista predefinita Italia (puoi modificarla quando vuoi)
 const ITALY_CENTER = [41.8719, 12.5674];  // lat, lon
-const ITALY_ZOOM   = 6;                   // livello di zoom
+const ITALY_ZOOM   = 6;                   // livello di zoom, usato solo come ripiego
+
+// Riquadro che contiene l'Italia: angolo sud-ovest e angolo nord-est.
+// La vista Italia si adatta a questo riquadro invece di usare uno zoom fisso,
+// cosi' su uno schermo alto la penisola riempie la mappa e su uno schermo
+// piccolo resta comunque tutta visibile.
+const ITALY_BOUNDS_SW = [35.45, 6.60];
+const ITALY_BOUNDS_NE = [47.10, 18.55];
+
+window.vistaItalia = function() {
+  const m = window.map;
+  if (!m) return;
+  try {
+    const b = L.latLngBounds(ITALY_BOUNDS_SW, ITALY_BOUNDS_NE);
+    m.fitBounds(b, { padding: [15, 15], animate: true });
+  } catch (e) {
+    m.setView(ITALY_CENTER, ITALY_ZOOM);
+  }
+};
 
     function initMap() {
       map = L.map('map', {
@@ -33242,7 +33637,7 @@ const ResetItalyControl = L.Control.extend({
 
     L.DomEvent.on(link, 'click', function (e) {
       L.DomEvent.stop(e);
-      map.setView(ITALY_CENTER, ITALY_ZOOM); // torna alla vista Italia
+      window.vistaItalia(); // torna alla vista Italia, adattata allo schermo
     });
 
     return container;
@@ -34677,7 +35072,7 @@ function drawMarkers() {
   nodesToDisplay.forEach(n => {
     if (n.lat == null || n.lon == null) return;
     if (n.zona && !isZoneActive(n.zona)) return;
-    if (n.area && !activeAreas.has(n.area)) return;
+    if (!isAreaActive(n)) return;
 
     // ✅ FIX: Usa _displayId o id per la selezione
     const nodeIdForSelection = n._displayId || n.id;
@@ -34855,7 +35250,7 @@ function updateClliLabels() {
     if (!n.clli) return;
     // Rispetta i filtri zona/area attivi
     if (n.zona && !isZoneActive(n.zona)) return;
-    if (n.area && window.activeAreas && !window.activeAreas.has(n.area)) return;
+    if (window.isAreaActive && !window.isAreaActive(n)) return;
 
     const nodeIdForSelection = n._displayId || n.id;
     const isSelected = selectedNodeIds.has(nodeIdForSelection) || selectedNodeIds.has(n.id);
@@ -34928,8 +35323,8 @@ function drawLinks() {
       if (to.zona   && !isZoneActive(to.zona))   return;
 
       // Filtro per AREA (NORD / CENTRO / SUD)
-      if (from.area && !activeAreas.has(from.area)) return;
-      if (to.area   && !activeAreas.has(to.area))   return;
+      if (!isAreaActive(from)) return;
+      if (!isAreaActive(to))   return;
 
       const isSelected = selectedIds.has(link.id);
 
@@ -35520,7 +35915,7 @@ function nodeMatchesFilter(node, text) {
         // applico filtro ZONA se presente - con mappatura DB
         if (n.zona && !isZoneActive(n.zona)) return false;
         // applico filtro AREA se presente
-        if (n.area && !activeAreas.has(n.area)) return false;
+        if (!isAreaActive(n)) return false;
         // Filtro Select: mostra solo i nodi selezionati (usa _displayId o id)
         const nodeIdForSelection = n._displayId || n.id;
         if (showOnlySelectedNodes && !selectedNodeIds.has(nodeIdForSelection) && !selectedNodeIds.has(n.id)) return false;
@@ -35709,8 +36104,8 @@ function linkMatchesFilter(link, text) {
         if (to.zona   && !isZoneActive(to.zona))   return false;
 
         // filtro per AREA
-        if (from.area && !activeAreas.has(from.area)) return false;
-        if (to.area   && !activeAreas.has(to.area))   return false;
+        if (!isAreaActive(from)) return false;
+        if (!isAreaActive(to))   return false;
 
         // Filtro Select: mostra solo i collegamenti selezionati
         if (showOnlySelectedLinks && !selectedIds.has(l.id)) return false;
@@ -35845,7 +36240,11 @@ if (useDbRaFormat) {
         ? String(distanceRaw).replace('.', ',')
         : 'N/D';
 
-    const area = link.area || (from && (from.area || from.Area)) || 'N/D';
+    const areaGrezza = link.area || (from && (from.area || from.Area)) || 'N/D';
+    const zonaGrezza = link.zona || (from && (from.zona || from.Zona)) || '';
+    const area = (window.areaEffettiva
+        ? window.areaEffettiva({ area: areaGrezza, zona: zonaGrezza })
+        : null) || areaGrezza;
     const zona = link.zona || (from && (from.zona || from.Zona)) || 'N/D';  
     const regione = link.regione || (from && (from.regione || from.Regione)) || 'N/D';
 
@@ -35909,7 +36308,11 @@ if (useDbRaFormat) {
         : link.id || 'N/D'; 
 
 
-    const area = link.area || (from && (from.area || from.Area)) || 'N/D';
+    const areaGrezza = link.area || (from && (from.area || from.Area)) || 'N/D';
+    const zonaGrezza = link.zona || (from && (from.zona || from.Zona)) || '';
+    const area = (window.areaEffettiva
+        ? window.areaEffettiva({ area: areaGrezza, zona: zonaGrezza })
+        : null) || areaGrezza;
     const zona = link.zona || (from && (from.zona || from.Zona)) || 'N/D';
     const regione = link.regione || (from && (from.regione || from.Regione)) || 'N/D';
     
@@ -36545,7 +36948,7 @@ function setupQuickActions() {
 
   // Reset zoom a default (vista Italia)
   if (window.map) {
-    window.map.setView(ITALY_CENTER, ITALY_ZOOM);
+    window.vistaItalia();
     console.log("Reset All completato");
   }
 
@@ -70561,8 +70964,8 @@ window.DB2_NODES = [
     "TipoSede": 2
   },
   {
-    "name": "TAINO\nANGERA",
-    "clli": "SECAITAE\nSECAITAF",
+    "name": "ANGERA",
+    "clli": "SECAITAF",
     "lat": 0,
     "lon": 0,
     "Zona": "MILO",
@@ -140237,8 +140640,8 @@ window.DB2_LINKS = [
     "vendor": "ADVA",
     "fromName": "SESTO CALENDE",
     "from": "SECAITAC",
-    "toName": "TAINO\nANGERA",
-    "to": "SECAITAE\nSECAITAF",
+    "toName": "ANGERA",
+    "to": "SECAITAF",
     "km": 0,
     "zona": "MILO",
     "regione": "Lombardia",
@@ -222365,6 +222768,65 @@ const roadRoute = L.polyline(coords, {
       <p><strong>NAT (National Topography) Italia</strong> è uno strumento professionale di visualizzazione, analisi e gestione delle reti nazionali italiane di telecomunicazioni DWDM. Progettato per ingegneri, tecnici e manager che operano nell'ambito delle infrastrutture di rete backbone (RC) e access (RA).</p>
 
       <div class="guide-highlight">
+        <p><strong>🆕 NOVITÀ VERSIONE Rev26.09.01 (01/09/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Filtro Area: il bottone NORD è stato diviso in <strong>NORD OVEST</strong> e <strong>NORD EST</strong>. NORD OVEST raccoglie PV (Piemonte, V.Aosta), LO | MILO (Lombardia) e LI (Liguria); NORD EST raccoglie NE (Trentino, Veneto, Friuli) e ER (Emilia Romagna)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• La divisione avviene al momento del filtro e della visualizzazione, leggendo la zona di ogni elemento. Il database non viene toccato: nelle tabelle di origine l'area resta NORD<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Le righe delle liste mostrano la macro-area suddivisa, coerente con i bottoni del filtro<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Un elemento del nord con una zona non prevista fra quelle sopra resta visibile finché almeno uno dei due bottoni è acceso, così nessun dato può sparire per una zona nuova<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Correzione dati: nel collegamento <strong>MILO_arco_1064 | MILO_355 | ALO082 | 5</strong> e nel nodo corrispondente, i campi di destinazione contenevano due sedi accorpate (TAINO e ANGERA, SECAITAE e SECAITAF). Restano ANGERA e SECAITAF; IdCavo lasciato invariato<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Nuova numerazione delle revisioni: da Rev22.38 si passa a <strong>Rev26.09.01</strong><br/><br/>
+
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.38 (25/08/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Bottone <strong>IT</strong> sulla mappa: la vista Italia non usa più uno zoom fisso al livello 6 ma si adatta al riquadro che contiene l'Italia. Su uno schermo alto la penisola riempie la mappa (livello 7), su uno schermo più basso resta comunque tutta visibile (livello 6). Stesso comportamento per il reset generale della mappa<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Colonna di sinistra ingrandita del 20%, come portare il browser al 120% sulla sola colonna. L'ingrandimento non si applica sotto i 1025 px di larghezza, dove la colonna mangerebbe la mappa<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• La misura si regola dalla variabile CSS <strong>--nat-sidebar-zoom</strong>; il maniglione di apertura e chiusura della colonna segue automaticamente la nuova larghezza<br/><br/>
+
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.37 (25/08/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Zoom su percorso CRO: la divisione in zone scattava troppo presto. Bastava un salto sopra i 40 km, per esempio Bergamo-Brescia, per spezzare in due un percorso tutto lombardo che andava mostrato intero<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Ora servono tre condizioni insieme: il percorso deve essere lungo almeno 225 km nel suo insieme, il salto deve superare i 150 km ed essere almeno quattro volte quello tipico del percorso, e ogni zona che ne esce deve avere almeno due nodi. Se una sola condizione manca, il percorso resta intero e ogni clic ripete la stessa inquadratura<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• La soglia si regola dalla console con <strong>CRO_ZOOM_SOGLIA_KM</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Resta invariato il ciclo dei clic quando le zone ci sono davvero: primo clic percorso intero, secondo clic prima zona, terzo clic seconda zona, quarto clic di nuovo percorso intero<br/><br/>
+
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.36 (25/08/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Zoom su percorso CRO: il livello di zoom non viene più chiesto a getBoundsZoom ma ricavato da un controllo fatto in proprio. Si parte dal massimo ingrandimento e si scende finché il riquadro del percorso, margine compreso, non entra tutto nello schermo: il primo livello che entra è anche il più ingrandito possibile<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Il centro è ora il punto medio in pixel, come fa fitBounds, e non più la media delle coordinate. Sulla proiezione di Mercatore i due punti non coincidono e un percorso lungo in latitudine risultava scentrato verso l'alto, con la parte bassa fuori schermo<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Margine attorno al percorso ridotto da 110 a 40 pixel per lato: il percorso riempie lo schermo<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Due regolazioni dalla console: <strong>CRO_ZOOM_MARGINE</strong> cambia il margine in pixel, <strong>CRO_ZOOM_ZONE = false</strong> disattiva la divisione in zone e fa mostrare a ogni clic il percorso intero<br/><br/>
+
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.35 (25/08/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Zoom su percorso CRO: risolto il caso in cui la mappa andava avanti e indietro da sola fra una zona e l'altra. Le ripetizioni dell'inquadratura di un clic precedente restavano attive fino a nove secondi e riportavano la vista sulla zona vecchia; ora un nuovo clic le annulla<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Le ripetizioni partono solo quando il clic accende un percorso spento, cioè l'unico caso in cui può scattare il cambio automatico a DB Unificato, e si fermano dopo quattro secondi<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Il livello di zoom non supera mai quello che contiene tutto il tratto inquadrato: il percorso intero, o la singola zona, si vede sempre per intero e non viene più tagliato dai bordi. Il livello ricavato dall'estensione resta solo come ripiego se il calcolo della mappa non risponde<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Nuovo ordine delle tappe: il primo clic mostra il percorso intero, i clic successivi una zona per volta, poi si torna al percorso intero. Il cambio avviene solo al clic<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Se il bottone Zoom spara due eventi ravvicinati (entro 450 ms) la tappa non avanza due volte<br/><br/>
+
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.34 (25/08/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Pannello "Ricerca Indirizzo" sulla mappa: ora si comprime e si espande dal comando nell'intestazione, ed è chiuso alla prima apertura. Lo stato resta memorizzato nel browser<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Zoom su percorso CRO: l'inquadratura torna centrata sulla mappa, senza più lo spostamento verso destra introdotto nella Rev22.33<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Percorsi che attraversano zone lontane (tipico quando nel mezzo c'è una RTN): il percorso viene spezzato sui salti molto più lunghi della norma, oltre 40 km e almeno quattro volte il salto tipico. Il primo clic su Zoom porta sulla prima zona, il secondo sulla seconda e così via; l'ultimo clic mostra il percorso intero e poi si ricomincia. Un avviso in alto indica a quale zona sei<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Chiuso un commento CSS rimasto aperto nello stile del pannello di ricerca, che annullava colore del testo e del bordo al passaggio del mouse sui suoi bottoni<br/><br/>
+
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.33 (25/08/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Zoom su percorso CRO: il livello di zoom non dipende più solo da fitBounds. Viene calcolato un pavimento in base all'estensione reale del percorso (sotto 1,5 km zoom 15, sotto 6 km zoom 13, sotto 25 km zoom 11 e così via, nessun pavimento oltre i 100 km), quindi un percorso corto non può in nessun caso restare sulla vista d'insieme<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Il centro della mappa viene spostato in pixel di metà dell'ingombro del pannello Percorsi CRO, così il percorso finisce al centro della striscia di mappa che resta visibile; al pannello non viene mai ceduto più del 60% della larghezza<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Coordinate del percorso ripulite prima del calcolo: valori non numerici o a zero vengono scartati, così un dato sporco non allarga più l'inquadratura<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• L'inquadratura viene ripetuta fino a 9 secondi dopo il clic, saltando i momenti in cui è in corso il cambio di database<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Aggiunto <strong>window.CRO_ZOOM_DEBUG</strong>: impostandolo a true dalla console, ogni zoom stampa estensione del percorso, dimensioni mappa, ingombro del pannello e zoom applicato<br/><br/>
+
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.32 (25/08/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Tolti i comandi "Espandi tutte" e "Comprimi tutte": ogni scheda si apre e si chiude dal proprio comando<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Il comando Comprimi/Espandi della scheda "Filtra per Zona" aveva il fondo piu' scuro delle altre due (ereditava lo stile dei bottoni dell'intestazione): ora le tre schede sono identiche<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Guida: aggiunta la dissolvenza in entrata e in uscita, che si somma allo scorrimento laterale già presente<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Pannello "Percorsi CRO": bottoni, pastiglie e interruttori squadrati, niente più forme ovali<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Zoom su percorso CRO: la mappa si adatta agli estremi del percorso invece di restare sulla vista d'insieme. L'inquadratura tiene conto dell'ingombro del pannello e viene ripetuta se il cambio automatico a DB Unificato rimette la vista larga<br/><br/>
+
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.31 (25/08/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Veste grafica allineata al tool CRO ITALIA: superfici delle schede abbassate a #f7f9fc e fondo pagina alzato a #dde4ee, grigi dell'interfaccia sulla scala fredda, testo #1d2939 al posto del nero pieno<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Le sezioni "Filtra per Area", "Filtra per Zona" e "Controlli mappa" si comprimono e si espandono cliccando il titolo o il comando a destra; lo stato resta memorizzato nel browser e alla prima apertura sono tutte chiuse<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Aggiunti i comandi "Espandi tutte" e "Comprimi tutte" in cima alla colonna di sinistra<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Liste "Collegamenti" e "Centrali / Nodi" con righe alternate ricalcolate a ogni ridisegno e evidenza al passaggio del mouse in indigo pastello #e0e7ff, visibile anche sulle righe già selezionate<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Bottoni, campi di testo e pastiglie squadrati a 6 px, schede a 10 px; restano tondi solo i cerchi veri (indicatore del tracker, rotella di caricamento)<br/><br/>
+
         <p><strong>🆕 NOVITÀ VERSIONE Rev22.30 (31/07/2026):</strong><br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Fix etichette combinate tooltip: alcune centrali SOLO RA venivano etichettate erroneamente anche [RC] (es. GIGNOD/AOSTITAC, GRESSAN/AOSTITAF)<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Causa: il controllo "è presente anche su RC?" usava window.NODES, che pero' cambia contenuto ad ogni cambio DB (RA/Unificato) — se la cache veniva costruita mentre non era attivo il DB RC, restava sbagliata per sempre<br/>
@@ -222696,7 +223158,7 @@ const roadRoute = L.polyline(coords, {
       <div class="feature-card">
         <h5>🔍 Sistema di Filtri Multi-livello</h5>
         <p><strong>Filtro Stato (struttura presente ma non attiva in questa revisione):</strong> il modello dati supporta 5 stati operativi (ATTIVO, NON_ATTIVO, IN_ATTIVAZIONE, IN_VARIAZIONE, IN_REINSTRADAMENTO), ma per questa versione la sezione di filtro dedicata e la colorazione per stato sono volutamente disabilitate a causa di limitazioni nell’aggiornamento automatico dello stato dei collegamenti.<br/>
-        <strong>Filtro Area:</strong> 3 macro-aree geografiche (NORD, CENTRO, SUD)<br/>
+        <strong>Filtro Area:</strong> 4 macro-aree geografiche (NORD OVEST, NORD EST, CENTRO, SUD)<br/>
         <strong>Filtro Zona:</strong> 14 zone regionali dettagliate<br/>
         <strong>Filtro Arco:</strong> Selezione per segmenti di rete specifici<br/>
         <strong>Ricerca Testuale:</strong> Per ID collegamento, nome centrale, CLLI</p>
@@ -227260,23 +227722,240 @@ function renderCRORoutesOnMap() {
 }
 
 // Zoom su percorso
+// L'inquadratura viene calcolata a mano invece di affidarsi al solo fitBounds:
+//  - il livello di zoom ha un pavimento ricavato dall'estensione reale del
+//    percorso, cosi' un percorso di pochi chilometri non puo' in nessun caso
+//    restare sulla vista d'insieme;
+//  - il pannello Percorsi CRO copre parte della mappa, quindi il centro viene
+//    spostato in pixel per portare il percorso nella striscia che si vede;
+//  - abilitare un percorso fa scattare il cambio automatico a DB Unificato,
+//    che ridisegna tutto: l'inquadratura viene ripetuta per una decina di
+//    secondi finche' non resta quella giusta.
+window.CRO_ZOOM_DEBUG = false;      // metti true per vedere i calcoli in console
+window.CRO_ZOOM_MARGINE = 40;       // pixel di margine per lato attorno al percorso
+window.CRO_ZOOM_ZONE = true;        // false = ogni clic mostra sempre il percorso intero
+window.CRO_ZOOM_SOGLIA_KM = 150;    // km oltre i quali un salto separa due zone
+window._croZoomStep = window._croZoomStep || {};
+window._croZoomToken = 0;
+window._croZoomLast = window._croZoomLast || { id: null, t: 0, passo: 0 };
+
+// Zoom su percorso.
+//  - Il livello di zoom e' il piu' stretto in cui il tratto mostrato ci sta
+//    ancora tutto dentro lo schermo, margine compreso. Il controllo e' fatto
+//    sui pixel proiettati, quindi vale qualunque sia la forma del percorso.
+//  - Il centro e' il punto medio in pixel, come fa fitBounds: sulla media
+//    delle coordinate un percorso lungo in latitudine risulta scentrato.
+//  - Se il percorso attraversa zone lontane (RTN nel mezzo) il primo clic
+//    mostra il percorso intero e i clic successivi una zona per volta. Il
+//    cambio avviene solo al clic.
 window.zoomToCRORoute = function(routeId) {
   const mapInstance = window.map || window.mapInstance;
   if (!mapInstance || !window.croRoutesData) return;
-  
+
   const route = window.croRoutesData.routes.find(r => r.id === routeId);
   if (!route) return;
-  
-  if (!window.croRouteVisibility[routeId]) window.toggleCRORoute(routeId);
-  
-  const coords = [];
-  route.links.forEach(link => {
-    if (link.from.lat && link.from.lon) coords.push([link.from.lat, link.from.lon]);
-    if (link.to.lat && link.to.lon) coords.push([link.to.lat, link.to.lon]);
+
+  // Annulla le ripetizioni ancora in coda di un clic precedente
+  const token = ++window._croZoomToken;
+
+  const eraNascosto = !window.croRouteVisibility[routeId];
+  if (eraNascosto) window.toggleCRORoute(routeId);
+
+  // Nodi in ordine di percorso, senza doppioni consecutivi e senza dati sporchi
+  const punti = [];
+  function aggiungi(n) {
+    if (!n) return;
+    const lat = +n.lat, lon = +n.lon;
+    if (!isFinite(lat) || !isFinite(lon)) return;
+    if (lat === 0 && lon === 0) return;
+    const ultimo = punti[punti.length - 1];
+    if (ultimo && ultimo[0] === lat && ultimo[1] === lon) return;
+    punti.push([lat, lon]);
+  }
+  (route.links || []).forEach(function(link) {
+    aggiungi(link.from);
+    aggiungi(link.to);
   });
-  
-  if (coords.length >= 2) {
-    mapInstance.fitBounds(L.latLngBounds(coords), { padding: [50, 50] });
+  if (!punti.length) {
+    console.warn('[CRO Zoom] Nessuna coordinata utile per il percorso', routeId);
+    return;
+  }
+
+  function distanza(a, b) {
+    const R = 6371000;
+    const p = Math.PI / 180;
+    const dLat = (b[0] - a[0]) * p;
+    const dLon = (b[1] - a[1]) * p;
+    const s = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(a[0] * p) * Math.cos(b[0] * p) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+  }
+
+  // Spezza il percorso solo su un vero salto a lunga distanza (RTN).
+  // Servono tre condizioni insieme, altrimenti il percorso resta intero:
+  //   1. il percorso nel suo insieme e' lungo almeno una volta e mezza la soglia
+  //   2. il salto supera la soglia in km ed e' almeno quattro volte quello tipico
+  //   3. ogni zona che ne esce ha almeno due nodi, altrimenti non c'e' nulla da
+  //      inquadrare e il percorso resta intero
+  function tratte() {
+    if (punti.length < 4) return [punti];
+
+    const sogliaKm = (+window.CRO_ZOOM_SOGLIA_KM > 0) ? +window.CRO_ZOOM_SOGLIA_KM : 150;
+    const soglia = sogliaKm * 1000;
+
+    // estensione complessiva, diagonale del riquadro che contiene il percorso
+    let minLat = punti[0][0], maxLat = punti[0][0], minLon = punti[0][1], maxLon = punti[0][1];
+    punti.forEach(function(p) {
+      if (p[0] < minLat) minLat = p[0];
+      if (p[0] > maxLat) maxLat = p[0];
+      if (p[1] < minLon) minLon = p[1];
+      if (p[1] > maxLon) maxLon = p[1];
+    });
+    const estensione = distanza([maxLat, minLon], [minLat, maxLon]);
+    if (estensione < soglia * 1.5) return [punti];
+
+    const salti = [];
+    for (let i = 1; i < punti.length; i++) salti.push(distanza(punti[i - 1], punti[i]));
+    const ordinati = salti.slice().sort(function(x, y) { return x - y; });
+    const mediana = ordinati[Math.floor(ordinati.length / 2)] || 0;
+    const limite = Math.max(soglia, mediana * 4);
+
+    const gruppi = [];
+    let corrente = [punti[0]];
+    for (let i = 1; i < punti.length; i++) {
+      if (salti[i - 1] > limite) {
+        gruppi.push(corrente);
+        corrente = [];
+      }
+      corrente.push(punti[i]);
+    }
+    gruppi.push(corrente);
+
+    // una zona con un solo nodo non e' una zona: lascio il percorso intero
+    const valide = gruppi.filter(function(t) { return t.length > 0; });
+    if (valide.length < 2) return [punti];
+    for (let i = 0; i < valide.length; i++) {
+      if (valide[i].length < 2) return [punti];
+    }
+    return valide;
+  }
+
+  const gruppi = (window.CRO_ZOOM_ZONE === false) ? [punti] : tratte();
+  const tappe = gruppi.length > 1 ? [punti].concat(gruppi) : [punti];
+
+  // Un solo avanzamento per clic
+  const adesso = Date.now();
+  const ultimoClic = window._croZoomLast;
+  let passo;
+  if (ultimoClic.id === routeId && (adesso - ultimoClic.t) < 450) {
+    passo = ultimoClic.passo % tappe.length;
+  } else {
+    passo = (window._croZoomStep[routeId] || 0) % tappe.length;
+    window._croZoomStep[routeId] = passo + 1;
+  }
+  window._croZoomLast = { id: routeId, t: adesso, passo: passo };
+
+  const selezione = tappe[passo];
+  const bounds = L.latLngBounds(selezione);
+  if (!bounds.isValid()) return;
+
+  function margine() {
+    const m = +window.CRO_ZOOM_MARGINE;
+    return isFinite(m) && m >= 0 ? m : 40;
+  }
+
+  // Il tratto ci sta tutto nello schermo a questo livello di zoom?
+  function contenuto(z) {
+    const size = mapInstance.getSize();
+    const m = margine();
+    const sw = mapInstance.project(bounds.getSouthWest(), z);
+    const ne = mapInstance.project(bounds.getNorthEast(), z);
+    const larghezza = Math.abs(ne.x - sw.x);
+    const altezza = Math.abs(sw.y - ne.y);
+    return larghezza <= (size.x - 2 * m) && altezza <= (size.y - 2 * m);
+  }
+
+  // Centro come lo calcola fitBounds: punto medio in pixel, non media
+  // delle coordinate (in proiezione Mercatore le due cose non coincidono)
+  function centro(z) {
+    try {
+      const sw = mapInstance.project(bounds.getSouthWest(), z);
+      const ne = mapInstance.project(bounds.getNorthEast(), z);
+      return mapInstance.unproject(sw.add(ne).divideBy(2), z);
+    } catch (e) {
+      return bounds.getCenter();
+    }
+  }
+
+  function livello() {
+    const massimo = Math.min(17, mapInstance.getMaxZoom ? mapInstance.getMaxZoom() : 17);
+    const minimo = mapInstance.getMinZoom ? mapInstance.getMinZoom() : 0;
+    let z = massimo;
+    // scendo finche' il tratto non ci sta tutto: il primo che ci sta e' anche
+    // il piu' ingrandito possibile
+    while (z > minimo && !contenuto(z)) z--;
+    return z;
+  }
+
+  function fit() {
+    let z;
+    try {
+      z = livello();
+    } catch (e) {
+      z = NaN;
+    }
+    if (!isFinite(z)) {
+      // ripiego se la proiezione non risponde
+      try { z = mapInstance.getBoundsZoom(bounds, false, L.point(80, 80)); } catch (e2) { z = 10; }
+      z = Math.min(z, 17);
+    }
+
+    if (window.CRO_ZOOM_DEBUG) {
+      const size = mapInstance.getSize();
+      const sw = mapInstance.project(bounds.getSouthWest(), z);
+      const ne = mapInstance.project(bounds.getNorthEast(), z);
+      console.log('[CRO Zoom]', routeId, {
+        punti: punti.length,
+        zone: gruppi.length,
+        soglia_zone_km: (+window.CRO_ZOOM_SOGLIA_KM > 0) ? +window.CRO_ZOOM_SOGLIA_KM : 150,
+        tappa: passo + 1,
+        di: tappe.length,
+        punti_tappa: selezione.length,
+        zoom: z,
+        riquadro_px: [Math.round(Math.abs(ne.x - sw.x)), Math.round(Math.abs(sw.y - ne.y))],
+        schermo_px: [size.x, size.y],
+        margine: margine()
+      });
+    }
+
+    mapInstance.setView(centro(z), z, { animate: true });
+    return z;
+  }
+
+  let target = fit();
+
+  // Avviso della tappa, solo quando il percorso e' spezzato in piu' zone
+  if (gruppi.length > 1 && typeof window.showToast === 'function') {
+    const testo = (passo === 0)
+      ? ('Percorso intero (' + gruppi.length + ' zone) - clicca di nuovo per la zona 1')
+      : ('Zona ' + passo + ' di ' + gruppi.length + ' - clicca di nuovo per '
+         + (passo < gruppi.length ? ('la zona ' + (passo + 1)) : 'il percorso intero'));
+    try { window.showToast({ message: testo, type: 'info', duration: 2600 }); } catch (e) {}
+  }
+
+  // Solo se ho appena acceso il percorso puo' partire il cambio automatico a
+  // DB Unificato, che ridisegna la mappa: in quel caso ripeto l'inquadratura.
+  if (eraNascosto) {
+    [400, 1200, 2400, 4000].forEach(function(ms) {
+      setTimeout(function() {
+        if (token !== window._croZoomToken) return;
+        try {
+          const overlay = document.getElementById('db-loading-overlay');
+          if (overlay && overlay.classList.contains('active')) return;
+          if (mapInstance.getZoom() !== target) target = fit();
+        } catch (e) {}
+      }, ms);
+    });
   }
 };
 
@@ -228627,6 +229306,261 @@ window.addZoomToSelectionControl = function(map) {
     }
   });
 
+})();
+</script>
+
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// [JS-010] RESTYLING GRAFICO ALLINEATO A CRO ITALIA  (Rev 22.31)
+//   - sezioni comprimibili con stato ricordato nel browser, chiuse di default
+//   - alternanza delle righe delle liste ricalcolata a ogni ridisegno
+//   - squadratura a runtime di quello che arriva con raggio troppo grande
+// ══════════════════════════════════════════════════════════════════════════════
+(function () {
+  'use strict';
+
+  // ── Sezioni comprimibili ──────────────────────────────────────────────────
+  // Le chiavi sono versionate (_v2): senza il suffisso lo stato gia' salvato
+  // sui browser impedirebbe al nuovo default (chiuso) di avere effetto.
+  var SECTIONS = [
+    { id: 'nat-box-area',      key: 'natSecCollapsed_area_v2',      header: 'h2' },
+    { id: 'nat-box-zona',      key: 'natSecCollapsed_zona_v2',      header: '.links-header' },
+    { id: 'nat-box-controlli', key: 'natSecCollapsed_controlli_v2', header: 'h2' }
+  ];
+
+  function readState(key) {
+    try {
+      var v = window.localStorage.getItem(key);
+      return v === null ? true : v === '1';   // default: sezione chiusa
+    } catch (e) {
+      return true;
+    }
+  }
+
+  function writeState(key, collapsed) {
+    try { window.localStorage.setItem(key, collapsed ? '1' : '0'); } catch (e) {}
+  }
+
+  function applyState(box, collapsed) {
+    box.classList.toggle('nat-collapsed', collapsed);
+    var btn = box.querySelector('.nat-sec-toggle');
+    if (btn) {
+      btn.textContent = collapsed ? 'Espandi' : 'Comprimi';
+      btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      btn.title = collapsed ? 'Apre questa sezione' : 'Chiude questa sezione';
+    }
+  }
+
+  function setupSection(cfg) {
+    var box = document.getElementById(cfg.id);
+    if (!box) return;
+    var header = box.querySelector(cfg.header);
+    if (!header) return;
+
+    header.classList.add('nat-sec-header');
+    box.classList.add('nat-collapsible');
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'nat-sec-toggle';
+    header.appendChild(btn);
+
+    function toggle() {
+      var collapsed = !box.classList.contains('nat-collapsed');
+      applyState(box, collapsed);
+      writeState(cfg.key, collapsed);
+      scheduleSquaring();
+    }
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggle();
+    });
+
+    // Il titolo apre e chiude; i comandi dentro l'intestazione restano cliccabili.
+    header.addEventListener('click', function (e) {
+      if (e.target && e.target.closest && e.target.closest('button, input, select, a, label')) return;
+      toggle();
+    });
+
+    applyState(box, readState(cfg.key));
+  }
+
+  // ── Alternanza delle righe (zebra) ────────────────────────────────────────
+  var ZEBRA = [
+    { id: 'links-list', sel: '.list-item' },
+    { id: 'nodes-list', sel: '.node-item' }
+  ];
+
+  function paintZebra(container, sel) {
+    var items = container.querySelectorAll(':scope > ' + sel);
+    var i = 0;
+    for (var k = 0; k < items.length; k++) {
+      var el = items[k];
+      if (el.style && el.style.display === 'none') {
+        el.classList.remove('nat-row-odd', 'nat-row-even');
+        continue;
+      }
+      if (i % 2 === 0) {
+        el.classList.remove('nat-row-even');
+        el.classList.add('nat-row-odd');
+      } else {
+        el.classList.remove('nat-row-odd');
+        el.classList.add('nat-row-even');
+      }
+      i++;
+    }
+  }
+
+  function initZebra() {
+    ZEBRA.forEach(function (t) {
+      var c = document.getElementById(t.id);
+      if (!c) return;
+      var pending = false;
+      function schedule() {
+        if (pending) return;
+        pending = true;
+        window.requestAnimationFrame(function () {
+          pending = false;
+          try { paintZebra(c, t.sel); } catch (e) {}
+        });
+      }
+      try {
+        new MutationObserver(schedule).observe(c, { childList: true });
+      } catch (e) {}
+      schedule();
+    });
+  }
+
+  // ── Squadratura a runtime ─────────────────────────────────────────────────
+  // Gira solo sui contenitori dell'interfaccia, mai sulla mappa, e salta gli
+  // elementi larghi quanto alti (cerchi veri con un numero o un'icona dentro).
+  var SQUARE_SCOPES = ['.sidebar', '#routing-panel', '#nearest-routes-panel', '#info-centrali-panel', '#cro-routes-panel'];
+  var SQUARE_SEL = 'button, select, textarea, .pill, .badge, .chip, input:not([type="checkbox"]):not([type="radio"])';
+
+  function squareOne(el) {
+    if (el.closest('#map, .leaflet-container')) return;
+    var cs = window.getComputedStyle(el);
+    var r = parseFloat(cs.borderTopLeftRadius);
+    if (!(r >= 14)) return;
+    var w = el.offsetWidth, h = el.offsetHeight;
+    if (w === 0 || h === 0) return;              // non ancora a schermo
+    if (Math.abs(w - h) <= 3) return;            // cerchio vero: lo lascio tondo
+    el.style.borderRadius = '6px';
+  }
+
+  function runSquaring() {
+    SQUARE_SCOPES.forEach(function (scope) {
+      var root = document.querySelector(scope);
+      if (!root) return;
+      var els = root.querySelectorAll(SQUARE_SEL);
+      for (var i = 0; i < els.length; i++) {
+        try { squareOne(els[i]); } catch (e) {}
+      }
+    });
+  }
+
+  var squaringTimer = null;
+  function scheduleSquaring() {
+    if (squaringTimer) window.clearTimeout(squaringTimer);
+    squaringTimer = window.setTimeout(runSquaring, 250);
+  }
+
+  // ── Avvio ─────────────────────────────────────────────────────────────────
+  function init() {
+    SECTIONS.forEach(setupSection);
+
+    initZebra();
+
+    scheduleSquaring();
+    window.setTimeout(runSquaring, 1500);
+    window.setTimeout(runSquaring, 4000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// [JS-011] PANNELLO "RICERCA INDIRIZZO" COMPRIMIBILE  (Rev 22.34)
+// Il pannello viene creato dopo l'avvio della mappa, quindi lo aspetto.
+// Lo stato resta memorizzato nel browser, chiuso alla prima apertura.
+// ══════════════════════════════════════════════════════════════════════════════
+(function () {
+  'use strict';
+
+  var KEY = 'natSecCollapsed_geocode_v2';
+
+  function leggiStato() {
+    try {
+      var v = window.localStorage.getItem(KEY);
+      return v === null ? true : v === '1';   // default: chiuso
+    } catch (e) {
+      return true;
+    }
+  }
+
+  function scriviStato(chiuso) {
+    try { window.localStorage.setItem(KEY, chiuso ? '1' : '0'); } catch (e) {}
+  }
+
+  function applica(panel, chiuso) {
+    panel.classList.toggle('nat-collapsed', chiuso);
+    var btn = panel.querySelector('.nat-geo-toggle');
+    if (btn) {
+      btn.textContent = chiuso ? 'Espandi' : 'Comprimi';
+      btn.setAttribute('aria-expanded', chiuso ? 'false' : 'true');
+      btn.title = chiuso ? 'Apre il pannello di ricerca' : 'Chiude il pannello di ricerca';
+    }
+  }
+
+  function prepara(panel) {
+    if (panel._natCollapsible) return;
+    var controls = panel.querySelector('.geocode-header-controls');
+    if (!controls) return;
+    panel._natCollapsible = true;
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'geocode-header-btn nat-geo-toggle';
+    controls.appendChild(btn);
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var chiuso = !panel.classList.contains('nat-collapsed');
+      applica(panel, chiuso);
+      scriviStato(chiuso);
+    });
+
+    applica(panel, leggiStato());
+  }
+
+  function attendi() {
+    var tentativi = 0;
+    var id = setInterval(function () {
+      tentativi++;
+      var panel = document.getElementById('geocode-panel');
+      if (panel) {
+        prepara(panel);
+        clearInterval(id);
+      } else if (tentativi > 120) {   // un minuto, poi lascio perdere
+        clearInterval(id);
+      }
+    }, 500);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attendi);
+  } else {
+    attendi();
+  }
 })();
 </script>
 
