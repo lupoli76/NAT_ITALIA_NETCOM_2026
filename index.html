@@ -5192,22 +5192,6 @@ body:not(.dark-mode) .ripple-effect {
 })();
 </script>
 
-<!-- ══════════════════════════════════════════════════════════════════════════
-     [SEC-001] EmailJS SDK + init — notifica accesso gate password
-     ══════════════════════════════════════════════════════════════════════════ -->
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>
-  (function() {
-    try {
-      if (window.emailjs) {
-        emailjs.init({ publicKey: '_cy-MNGQQccLr1fw9' });
-      }
-    } catch (e) {
-      console.warn('[NAT] EmailJS init fallito:', e);
-    }
-  })();
-</script>
-
 </head>
 <!-- ══════════════════════════════════════════════════════════════════════════════
      [HTML-001] INTRO SCREEN
@@ -5215,215 +5199,6 @@ body:not(.dark-mode) .ripple-effect {
      ══════════════════════════════════════════════════════════════════════════════ -->
 <body class="intro-active">
 
-  <!-- ══════════════════════════════════════════════════════════════════════════
-       [SEC-002] GATE PASSWORD — solo via link (http/https), bypass in locale (file://)
-       ══════════════════════════════════════════════════════════════════════════ -->
-  <div id="natAccessGate" style="position:fixed; inset:0; z-index:999999; background:linear-gradient(135deg,#0f172a,#1e3a5f); display:flex; align-items:center; justify-content:center; font-family:'Segoe UI',Arial,sans-serif;">
-    <div style="background:#fff; border-radius:12px; padding:36px 40px; max-width:380px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.4); text-align:center;">
-      <div style="font-size:40px; margin-bottom:8px;">🔒</div>
-      <div style="font-size:20px; font-weight:700; color:#0066CC; margin-bottom:4px;">NAT Italia</div>
-      <div style="font-size:13px; color:#666; margin-bottom:20px;">Accesso riservato</div>
-      <input type="text" id="natGateTimIdInput" placeholder="ID TIM (es. X0123456)" autocomplete="off"
-             style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; margin-bottom:10px; box-sizing:border-box; text-transform:uppercase;" />
-      <input type="password" id="natGatePasswordInput" placeholder="Password" autocomplete="off"
-             style="width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; margin-bottom:10px; box-sizing:border-box;" />
-      <div id="natGateError" style="display:none; color:#c0392b; font-size:12px; margin-bottom:10px;">❌ Password errata, riprova.</div>
-      <button id="natGateSubmitBtn" type="button"
-              style="width:100%; padding:10px; background:#0066CC; color:#fff; border:none; border-radius:6px; font-size:14px; font-weight:600; cursor:pointer;">
-        Accedi
-      </button>
-      <div style="margin-top:16px; font-size:11px; color:#888; line-height:1.4; text-align:left; background:#f3f4f6; border-radius:6px; padding:8px 10px;">
-        ℹ️ L'accesso viene registrato per motivi di sicurezza (ID TIM, IP pubblico e informazioni del browser).
-      </div>
-    </div>
-  </div>
-
-  <script>
-  // ─── [SEC-002B] Mappa ID TIM → Nome Cognome (da compilare) ───
-  // Aggiungi qui le associazioni ID TIM → Nome, es: 'X0123456': 'Mario Rossi'.
-  // Se un ID inserito nel gate non è presente in questa mappa, l'email di notifica
-  // riporterà comunque l'ID TIM digitato, con nome "N/D (ID non mappato)".
-  window.NAT_TIM_ID_NAME_MAP = {
-    // 'X0123456': 'Mario Rossi',
-  };
-  </script>
-
-  <script>
-  // ─── [SEC-003] Fingerprint dispositivo: canvas 2D + WebGL + info sistema → SHA-256 (16 char) ───
-  async function natGenerateDeviceFingerprint() {
-    var parts = [];
-    try {
-      var canvas = document.createElement('canvas');
-      canvas.width = 220; canvas.height = 30;
-      var ctx = canvas.getContext('2d');
-      ctx.textBaseline = 'top';
-      ctx.font = '14px Arial';
-      ctx.fillStyle = '#f60';
-      ctx.fillRect(0, 0, 100, 20);
-      ctx.fillStyle = '#069';
-      ctx.fillText('NAT-fp-\uD83D\uDD12', 2, 2);
-      parts.push(canvas.toDataURL());
-    } catch (e) { parts.push('canvas-err'); }
-    try {
-      var glCanvas = document.createElement('canvas');
-      var gl = glCanvas.getContext('webgl') || glCanvas.getContext('experimental-webgl');
-      if (gl) {
-        var dbgInfo = gl.getExtension('WEBGL_debug_renderer_info');
-        if (dbgInfo) {
-          parts.push(gl.getParameter(dbgInfo.UNMASKED_VENDOR_WEBGL));
-          parts.push(gl.getParameter(dbgInfo.UNMASKED_RENDERER_WEBGL));
-        } else {
-          parts.push(gl.getParameter(gl.VENDOR));
-          parts.push(gl.getParameter(gl.RENDERER));
-        }
-      } else {
-        parts.push('no-webgl');
-      }
-    } catch (e) { parts.push('webgl-err'); }
-    parts.push(screen.width + 'x' + screen.height);
-    parts.push(screen.colorDepth);
-    try { parts.push(Intl.DateTimeFormat().resolvedOptions().timeZone || ''); } catch (e) { parts.push(''); }
-    parts.push(navigator.platform || '');
-    parts.push(navigator.hardwareConcurrency || '');
-    // NOTA: userAgent e language ESCLUSI volutamente dall'hash (fix bug):
-    // sono legati al browser, non all'hardware — stesso PC + browser diverso
-    // (es. Edge vs Chrome, entrambi Chromium) produceva hash diversi.
-    // Vengono comunque inviati come campi separati nell'email (user_agent, language).
-    var raw = parts.join('|||');
-    try {
-      var enc = new TextEncoder().encode(raw);
-      var hashBuffer = await crypto.subtle.digest('SHA-256', enc);
-      var hashArray = Array.from(new Uint8Array(hashBuffer));
-      var hashHex = hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
-      return hashHex.substring(0, 16);
-    } catch (e) {
-      return 'fp-error';
-    }
-  }
-
-  // ─── [SEC-004] Notifica email via EmailJS ad ogni sblocco riuscito ───
-  async function natSendAccessNotification(timId) {
-    try {
-      var fingerprint = await natGenerateDeviceFingerprint();
-      var ip = 'N/D';
-      try {
-        var resp = await fetch('https://api.ipify.org?format=json');
-        var data = await resp.json();
-        ip = data.ip;
-      } catch (e) { ip = 'N/D (errore recupero IP)'; }
-      var now = new Date();
-      var accessTime = now.toLocaleString('it-IT', { dateStyle: 'full', timeStyle: 'medium' });
-      var resolvedName = (window.NAT_TIM_ID_NAME_MAP && window.NAT_TIM_ID_NAME_MAP[timId]) || 'N/D (ID non mappato)';
-      var params = {
-        to_email: 'lupoli76@gmail.com',
-        access_time: accessTime,
-        ip_address: ip,
-        tim_id: timId || 'N/D',
-        tim_name: resolvedName,
-        platform: navigator.platform || 'N/D',
-        screen_res: screen.width + 'x' + screen.height,
-        screen_avail_res: screen.availWidth + 'x' + screen.availHeight,
-        language: navigator.language || 'N/D',
-        timezone: (Intl.DateTimeFormat().resolvedOptions().timeZone) || 'N/D',
-        user_agent: navigator.userAgent || 'N/D',
-        device_fingerprint: fingerprint,
-        page_url: window.location.href
-      };
-      if (window.emailjs) {
-        emailjs.send('service_01b3i93', 'template_nat_access', params);
-      }
-    } catch (e) {
-      console.warn('[NAT] Notifica accesso non inviata:', e);
-    }
-  }
-
-  // ─── [SEC-005] Logica gate: bypass in locale, sblocco valido UNA VOLTA AL GIORNO per dispositivo/browser (localStorage) ───
-  // Il controllo avviene subito, in modo sincrono, prima che parta l'eventuale splash/animazione (SEC che segue).
-  // L'animazione intro (window.__natRunIntroOverlay, definita più avanti nel file)
-  // parte SOLO dopo lo sblocco (immediato se già valido oggi, altrimenti dopo inserimento password corretta).
-  // Password verificata via hash SHA-256 — non è salvata in chiaro nel codice.
-  (function() {
-    var NAT_GATE_PASSWORD_HASH = 'c93fd02c41277c7fcd791fab97fff9ff4c4a25325ee11d70356c9733ef898fbb'; // SHA-256 della password
-    var NAT_GATE_STORAGE_KEY = 'natGateLastUnlockDate';
-    var gate = document.getElementById('natAccessGate');
-    var isFileProtocol = (window.location.protocol === 'file:');
-
-    function natTodayString() {
-      var d = new Date();
-      var mm = String(d.getMonth() + 1).padStart(2, '0');
-      var dd = String(d.getDate()).padStart(2, '0');
-      return d.getFullYear() + '-' + mm + '-' + dd;
-    }
-
-    async function natSha256Hex(str) {
-      var enc = new TextEncoder().encode(str);
-      var hashBuffer = await crypto.subtle.digest('SHA-256', enc);
-      var hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
-    }
-
-    if (isFileProtocol) {
-      if (gate) gate.style.display = 'none';
-      window.__natGateUnlocked = true;
-      return;
-    }
-
-    var storedDate = null;
-    try { storedDate = localStorage.getItem(NAT_GATE_STORAGE_KEY); } catch (e) { storedDate = null; }
-
-    if (storedDate === natTodayString()) {
-      // Già sbloccato oggi su questo dispositivo/browser: accesso diretto, NESSUNA notifica email.
-      if (gate) gate.style.display = 'none';
-      window.__natGateUnlocked = true;
-      return;
-    }
-
-    window.__natGateUnlocked = false;
-
-    async function natTryUnlock() {
-      var timInput = document.getElementById('natGateTimIdInput');
-      var pwInput = document.getElementById('natGatePasswordInput');
-      var errorEl = document.getElementById('natGateError');
-      if (!timInput || !pwInput) return;
-
-      var timId = (timInput.value || '').trim().toUpperCase();
-      if (!timId) {
-        if (errorEl) { errorEl.textContent = '❌ Inserisci il tuo ID TIM.'; errorEl.style.display = 'block'; }
-        timInput.focus();
-        return;
-      }
-
-      var enteredHash = await natSha256Hex(pwInput.value || '');
-      if (enteredHash === NAT_GATE_PASSWORD_HASH) {
-        try { localStorage.setItem(NAT_GATE_STORAGE_KEY, natTodayString()); } catch (e) {}
-        window.__natGateUnlocked = true;
-        if (gate) gate.style.display = 'none';
-        if (typeof window.__natMaybeStartIntro === 'function') {
-          window.__natMaybeStartIntro();
-        }
-        natSendAccessNotification(timId);
-      } else {
-        if (errorEl) { errorEl.textContent = '❌ Password errata, riprova.'; errorEl.style.display = 'block'; }
-        pwInput.value = '';
-        pwInput.focus();
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-      var btn = document.getElementById('natGateSubmitBtn');
-      var timInput = document.getElementById('natGateTimIdInput');
-      var pwInput = document.getElementById('natGatePasswordInput');
-      if (btn) btn.addEventListener('click', natTryUnlock);
-      if (pwInput) {
-        pwInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') natTryUnlock(); });
-      }
-      if (timInput) {
-        timInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { pwInput && pwInput.focus(); } });
-        timInput.focus();
-      }
-    });
-  })();
-  </script>
 
   <div id="introOverlay">
     <div class="intro-content">
@@ -5700,7 +5475,7 @@ body:not(.dark-mode) .ripple-effect {
   <!-- Inizio Footer di Progetto -->
 <div class="project-info" style="font-size: 0.85em; text-align: center; color: #555555;">
     <div>
-        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev26.09.01 • CON Accesso • 01/09/2026]
+        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev26.09.01 • SENZA Accesso • 01/09/2026]
     </div>
 
     <div style="margin-top: 3px;">
@@ -36970,11 +36745,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   <script>
     // Overlay iniziale NAT in stile CRO (gradiente blu + fade)
-    // Parte SOLO dopo: (1) window 'load' completato E (2) gate password sbloccato (SEC-005)
-    window.__natRunIntroOverlay = function () {
-      if (window.__natIntroStarted) return;
-      window.__natIntroStarted = true;
-
+    window.addEventListener('load', function () {
       var overlay = document.getElementById('introOverlay');
       var body    = document.body;
       if (!overlay) return;
@@ -36988,7 +36759,7 @@ window.addEventListener('DOMContentLoaded', () => {
         // Avvia il fade-in del layout contemporaneamente
         body.classList.remove('intro-active');
         body.classList.add('intro-done');
-
+        
         // Abilita lo scroll
         document.documentElement.classList.add('intro-complete');
         body.classList.add('intro-complete');
@@ -37000,17 +36771,6 @@ window.addEventListener('DOMContentLoaded', () => {
           }
         }, FADE_MS);
       }, DISPLAY_MS);
-    };
-
-    window.__natMaybeStartIntro = function () {
-      if (window.__natWindowLoaded && window.__natGateUnlocked) {
-        window.__natRunIntroOverlay();
-      }
-    };
-
-    window.addEventListener('load', function () {
-      window.__natWindowLoaded = true;
-      window.__natMaybeStartIntro();
     });
   </script>
 
@@ -223076,13 +222836,10 @@ const roadRoute = L.polyline(coords, {
         &nbsp;&nbsp;&nbsp;&nbsp;• Nota statistiche DB in fondo pagina aggiornata (conteggi corretti da 4.058/807 verificati sui dati reali): RA aggiornato al 27/07/2026, RC al 16/07/2026<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Nei tooltip dei marker centrale (mappa e testo copiato) aggiunte etichette combinate tra parentesi quadre dopo il nome: TipoSede [T1]/[T2]/[T3], [RC] se la centrale è presente anche nel DB RC, [A1] o [A1 - Non x PE] se è un Nodo A1, [DC] se è un Data Center — es. "ACQUAPENDENTE [T2]", "[T1] [RC] [A1]"<br/><br/>
 
-        <p><strong>🆕 NOVITÀ VERSIONE Rev22.25 (22/07/2026) — CON Accesso:</strong><br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• Password del gate ora verificata via hash SHA-256, non più salvata in chiaro nel codice<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• Aggiunto campo ID TIM obbligatorio nel gate (es. X0123456)<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• Aggiunta mappa ID TIM → Nome Cognome (da compilare) per risolvere il nome nella notifica email<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• Notifica email arricchita con ID TIM, nome risolto e risoluzione schermo disponibile<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• Nota di trasparenza nel gate aggiornata per menzionare l'ID TIM<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• Da questa versione in poi, il tool viene mantenuto in due varianti parallele: CON Accesso (questa) e SENZA Accesso<br/><br/>
+        <p><strong>🆕 NOVITÀ VERSIONE Rev22.25 (22/07/2026) — SENZA Accesso:</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Questa è la variante gemella della versione CON Accesso: stesso identico tool, nessun gate password, nessuna notifica email, nessun fingerprint dispositivo<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Si apre diretta con lo splash normale, sia in locale (file://) sia via link<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Da questa versione in poi, il tool viene mantenuto in due varianti parallele sempre sincronizzate: CON Accesso e SENZA Accesso (questa)<br/><br/>
 
         <p><strong>🆕 NOVITÀ VERSIONE Rev22.24 (22/07/2026):</strong><br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Fix bug: il pulsante di chiusura (×) dei tooltip permanenti copriva parte del testo (es. il CLLI nel nome della centrale)<br/>
