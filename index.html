@@ -22,7 +22,11 @@
 ║  │ [CSS-009] Stili CRO Routes                → cerca: [CSS-009]               │ ║
 ║  │ [CSS-010] Restyling grafico stile CRO     → cerca: [CSS-010]               │ ║
 ║  │ [CSS-011] Rifiniture grafiche             → cerca: [CSS-011]               │ ║
+║  │ [CSS-012] Stato collegamento nelle liste  → cerca: [CSS-012]               │ ║
+║  │ [CSS-013] Scheda info del collegamento    → cerca: [CSS-013]               │ ║
 ║  │ [JS-011] Ricerca Indirizzo comprimibile   → cerca: [JS-011]                │ ║
+║  │ [JS-012] Pastiglia stato collegamento     → cerca: [JS-012]                │ ║
+║  │ [JS-013] Scheda info del collegamento     → cerca: [JS-013]                │ ║
 ║  ├────────────────────────────────────────────────────────────────────────────┤ ║
 ║  │ [JS-001] Toast System                     → cerca: [JS-001]                │ ║
 ║  │ [JS-002] Responsive Layout                → cerca: [JS-002]                │ ║
@@ -4966,8 +4970,16 @@ body:not(.dark-mode) .ripple-effect {
   --nat-sidebar-zoom: 1.2;
 }
 @media (min-width: 1025px) {
+  /* 500 px invece di 450: con meno di questo la pastiglia dello stato va a capo
+     sulle righe con CLLI, Id e distanza piu' lunghi, e dal Rev26.09.01 i due
+     bottoni della riga occupano spazio in linea. Misurato su tutti i
+     collegamenti di RA e RC. */
+  :root {
+    --sidebar-width: 560px;
+  }
   body:not(.dark-mode) .sidebar {
     zoom: var(--nat-sidebar-zoom);
+    max-width: var(--sidebar-width);
     max-height: calc((100vh - 20px) / 1.2);
   }
   .sidebar-toggle {
@@ -4978,6 +4990,334 @@ body:not(.dark-mode) .ripple-effect {
   }
 }
 /* fine [CSS-011] */
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   [CSS-013] SCHEDA TECNICA DEL COLLEGAMENTO
+   Bottone info in ogni riga della lista e finestra di dettaglio, nella stessa
+   veste del pannello Suggerimento Routing: intestazione blu scura, sottotesta
+   azzurra con gli identificativi, corpo a colonne, piede con i comandi.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* I due bottoni stanno affiancati in alto a destra, nell'ordine info e
+   routing. Entrano nel flusso della riga invece di essere sovrapposti, cosi'
+   il testo si ferma prima e non ci finisce mai sotto. */
+.list-azioni {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: 6px;
+  padding-top: 1px;
+}
+.btn-info-link,
+.list-item .btn-routing {
+  position: static;
+  top: auto;
+  right: auto;
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.btn-info-link {
+  background: #eef2f8;
+  border: 1px solid #c4ccda;
+  color: #0c3b6e;
+}
+.btn-info-link:hover { background: #dde4ee; border-color: #98a2b3; }
+
+/* ── Finestra ─────────────────────────────────────────────────────────────── */
+#info-link-overlay {
+  position: fixed; inset: 0; z-index: 12000;
+  background: rgba(12, 59, 110, 0.42);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.22s ease, visibility 0.22s ease;
+}
+#info-link-overlay.aperto { opacity: 1; visibility: visible; }
+
+#info-link-card {
+  background: #fff; border-radius: 12px;
+  width: min(1420px, 96vw); max-height: 88vh;
+  display: flex; flex-direction: column; overflow: hidden;
+  font-size: 13px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.38);
+  transform: translateY(8px);
+  transition: transform 0.22s ease;
+}
+#info-link-overlay.aperto #info-link-card { transform: none; }
+
+.il-head {
+  background: #0c3b6e; color: #fff; padding: 10px 14px;
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  user-select: none;
+}
+.il-head h3 {
+  margin: 0; font-size: 13px; font-weight: 700; flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.il-close {
+  background: rgba(255, 255, 255, 0.15); border: none; color: #fff;
+  border-radius: 6px; padding: 4px 11px; cursor: pointer;
+  font-size: 15px; font-weight: bold; flex-shrink: 0; line-height: 1;
+}
+.il-close:hover { background: rgba(255, 255, 255, 0.3); }
+
+.il-sub {
+  background: #e6f0fa; border-bottom: 1px solid #ccd9ea;
+  padding: 6px 14px; font-size: 12px; color: #0c3b6e; flex-shrink: 0;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.il-id {
+  font-weight: 700; font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 11px; background: #fff; border: 1px solid #b3cce6;
+  border-radius: 4px; padding: 2px 7px; color: #0c3b6e;
+  max-width: 100%; word-break: break-all;
+}
+.il-rotta { margin-left: auto; font-weight: 700; color: #004C99; }
+
+.il-body { overflow-y: auto; flex: 1; min-height: 0; }
+
+
+/* ── Corpo a schede ───────────────────────────────────────────────────────── */
+.il-body { background: #eef1f6; }
+/* Le schede strette stanno in un impaginato a colonne: si incastrano una sotto
+   l'altra riempiendo lo spazio, invece di lasciare celle vuote come farebbe una
+   griglia a righe con schede di altezza diversa. */
+.il-schede {
+  /* larghezza minima di colonna invece di un numero fisso: il browser ne mette
+     quante ne stanno, e nessuna scheda diventa cosi' stretta da costringere gli
+     identificativi del DB RA ad andare a capo */
+  columns: 340px;
+  column-gap: 10px;
+  padding: 12px 12px 2px;
+}
+.il-schede-larghe { padding: 0 12px 12px; }
+.il-schede-larghe .il-card { margin-bottom: 10px; }
+.il-schede-larghe .il-card:last-child { margin-bottom: 0; }
+
+.il-card {
+  background: #fff; border: 1px solid #dfe4ec; border-radius: 8px;
+  overflow: hidden; box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+  break-inside: avoid; page-break-inside: avoid; -webkit-column-break-inside: avoid;
+  margin: 0 0 10px;
+}
+
+
+.il-card-head {
+  margin: 0; padding: 6px 10px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase;
+  border-bottom: 1px solid #e5e7eb; border-left: 3px solid #98a2b3;
+  background: #f3f5f9; color: #475467;
+  display: flex; align-items: center; gap: 8px;
+}
+.il-card-head .il-conta {
+  margin-left: auto; font-weight: 700; font-size: 10px;
+  border-radius: 4px; padding: 1px 6px;
+  text-transform: none; letter-spacing: 0;
+  background: rgba(255, 255, 255, 0.75); border: 1px solid currentColor;
+}
+.il-card-head.g-ident  { border-left-color: #0c3b6e; background: #eef3fa; color: #0c3b6e; }
+.il-card-head.g-stato  { border-left-color: #1a6e38; background: #edf6f0; color: #1a6e38; }
+.il-card-head.g-pos    { border-left-color: #B45309; background: #fbf3e6; color: #8a5a04; }
+.il-card-head.g-rete   { border-left-color: #5b3ea8; background: #f2eefb; color: #4b3190; }
+.il-card-head.g-altri  { border-left-color: #667085; background: #f1f3f7; color: #475467; }
+.il-card-head.g-anag-a { border-left-color: #004C99; background: #eef5ff; color: #004C99; }
+.il-card-head.g-anag-z { border-left-color: #1a6e38; background: #edf6f0; color: #1a6e38; }
+.il-card-head.g-cavi   { border-left-color: #0c3b6e; background: #eef3fa; color: #0c3b6e; }
+.il-card-head.g-note   { border-left-color: #98a2b3; background: #f3f5f9; color: #475467; }
+
+.il-card-body { padding: 2px 0 3px; }
+.il-card-body .il-riga:last-child { border-bottom: none; }
+.il-sotto {
+  padding: 5px 10px 3px; font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.6px; text-transform: uppercase; color: #98a2b3;
+  background: #fafbfd; border-top: 1px solid #f1f3f7; border-bottom: 1px solid #f1f3f7;
+}
+.il-card-body > .il-sotto:first-child { border-top: none; }
+.il-card .il-et { min-width: 104px; }
+
+/* Carattere stretto, usato solo quando il valore non ci starebbe.
+   Arial Narrow su Windows, le altre sono le equivalenti altrove. */
+.il-val.stretto {
+  font-family: 'Arial Narrow', 'Liberation Sans Narrow', 'DejaVu Sans Condensed',
+               'TeX Gyre Heros Cn', 'Helvetica Neue', Arial, sans-serif !important;
+  font-stretch: condensed;
+  letter-spacing: 0;
+}
+
+/* Valore lungo: etichetta sopra e valore sotto, cosi' prende tutta la
+   larghezza della scheda invece di spezzarsi in due righe accanto
+   all'etichetta. */
+.il-riga.il-riga-alta {
+  display: block;
+  padding: 4px 10px 5px;
+}
+.il-riga.il-riga-alta .il-et {
+  display: block; flex: none; margin-bottom: 2px;
+}
+.il-riga.il-riga-alta .il-val { display: block; }
+
+.il-nota-blocco { padding: 7px 10px; border-bottom: 1px solid #f3f4f6; }
+.il-nota-blocco:last-child { border-bottom: none; }
+.il-nota-blocco .il-et { display: block; flex: none; margin-bottom: 3px; }
+.il-nota-blocco .il-val { display: block; font-weight: 500; }
+
+@media (max-width: 760px) {
+  .il-card .il-et { flex-basis: 104px; }
+}
+
+/* Intestazioni di sezione: fascia chiara con un accento di colore diverso
+   per ogni gruppo, cosi' l'occhio separa i blocchi senza doverli leggere. */
+.il-gruppo {
+  padding: 5px 12px 4px; font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.7px; text-transform: uppercase;
+  border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb;
+  border-left: 3px solid #98a2b3;
+  background: #f3f5f9; color: #475467;
+}
+.il-col > .il-gruppo:first-of-type { border-top: none; }
+.il-gruppo.g-ident { border-left-color: #0c3b6e; background: #eef3fa; color: #0c3b6e; }
+.il-gruppo.g-stato { border-left-color: #1a6e38; background: #edf6f0; color: #1a6e38; }
+.il-gruppo.g-pos   { border-left-color: #B45309; background: #fbf3e6; color: #8a5a04; }
+.il-gruppo.g-rete  { border-left-color: #5b3ea8; background: #f2eefb; color: #4b3190; }
+.il-gruppo.g-altri { border-left-color: #667085; background: #f1f3f7; color: #475467; }
+.il-gruppo.g-anag-a { border-left-color: #004C99; background: #eef5ff; color: #004C99; }
+.il-gruppo.g-anag-z { border-left-color: #1a6e38; background: #edf6f0; color: #1a6e38; }
+
+.il-riga {
+  display: flex; gap: 8px; padding: 4px 12px;
+  border-bottom: 1px solid #f3f4f6; align-items: baseline; font-size: 12px;
+}
+/* Zebra assegnata mentre si costruisce la scheda, non con nth-child: fra una
+   riga e l'altra si inseriscono le intestazioni di sezione e il conteggio
+   sarebbe sfalsato. */
+.il-riga.z-pari { background: #f6f8fb; }
+/* I cavi sono disposti su piu' colonne: qui l'alternanza darebbe una
+   scacchiera, quindi ogni voce ha la stessa velatura. */
+.il-cavi li {
+  padding: 3px 7px; border-radius: 4px;
+  background: #f6f8fb; border: 1px solid #eceff5;
+}
+.il-et {
+  flex: 0 0 auto; min-width: 128px;
+  color: #667085; font-weight: 600; font-size: 11px;
+  white-space: nowrap;          /* mai tagliata, mai spezzata */
+}
+.il-val { flex: 1; min-width: 0; color: #101828; font-weight: 600; word-break: break-word; }
+.il-val.mono {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 11.5px; letter-spacing: -0.1px;
+}
+.il-val.vuoto { color: #98a2b3; font-weight: 400; font-style: italic; }
+
+.il-banda { border-top: 1px solid #e5e7eb; }
+.il-banda-head {
+  padding: 7px 12px; background: #f3f5f9; color: #344054;
+  font-weight: 700; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.05em; border-bottom: 2px solid #98a2b3;
+  display: flex; align-items: center; gap: 8px;
+}
+.il-banda-head .il-conta {
+  font-weight: 700; font-size: 10px; color: #004C99;
+  background: #e6f0fa; border: 1px solid #b3cce6; border-radius: 4px; padding: 1px 6px;
+  text-transform: none; letter-spacing: 0;
+}
+.il-cavi {
+  list-style: none; margin: 0; padding: 6px 10px;
+  display: grid; grid-template-columns: 1fr;
+  gap: 3px;
+}
+.il-cavi li {
+  display: flex; gap: 7px; align-items: baseline;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 11.5px; color: #101828; font-weight: 600; word-break: break-all;
+}
+.il-cavi li .n {
+  flex: 0 0 22px; color: #98a2b3; font-weight: 700; text-align: right;
+}
+.il-nota { padding: 5px 12px; font-size: 12px; border-bottom: 1px solid #f3f4f6; }
+.il-nota .il-et { display: block; flex: none; margin-bottom: 2px; }
+
+.il-foot {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  padding: 10px 14px; background: #f3f5f9;
+  border-top: 1px solid #e5e7eb; flex-shrink: 0;
+}
+.il-btn {
+  border-radius: 6px; border: 1px solid #b3cce6; background: #e6f0fa;
+  color: #0c3b6e; font-size: 12px; font-weight: 700; padding: 6px 14px;
+  cursor: pointer; min-width: 150px; box-sizing: border-box;
+  transition: background 0.15s;
+}
+.il-btn:hover { background: #cde0f5; }
+.il-btn.primario { background: #0c3b6e; border-color: #0c3b6e; color: #fff; }
+.il-btn.primario:hover { background: #0a2f58; }
+.il-esito { font-size: 11px; font-weight: 700; color: #146C38; }
+.il-riepilogo { margin-left: auto; font-size: 11px; color: #667085; font-weight: 600; }
+
+@media (max-width: 900px) {
+  .il-grid { grid-template-columns: 1fr; }
+  .il-col { border-right: none; border-bottom: 1px solid #e5e7eb; }
+  .il-et { flex-basis: 110px; }
+}
+
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   [CSS-012] STATO DEL COLLEGAMENTO NELLE LISTE
+   Pastiglia con pallino colorato accanto alla distanza. Il colore serve per la
+   lettura veloce, il testo resta perche' il colore da solo non deve mai essere
+   l'unica informazione.
+   ══════════════════════════════════════════════════════════════════════════════ */
+.stato-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 4px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 14px;
+  letter-spacing: normal;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+.stato-chip .stato-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stato-chip.stato-verde  { background: #E8F6EC; border-color: #A9DCBC; color: #146C38; }
+.stato-chip.stato-verde  .stato-dot { background: #16A34A; }
+
+.stato-chip.stato-rosso  { background: #FDEBEB; border-color: #F0B4B4; color: #A31515; }
+.stato-chip.stato-rosso  .stato-dot { background: #DC2626; }
+
+.stato-chip.stato-ambra  { background: #FCF3D7; border-color: #E4C877; color: #7A5103; }
+.stato-chip.stato-ambra  .stato-dot { background: #D9900A; }
+
+.stato-chip.stato-blu    { background: #E7EEFB; border-color: #A9C2EE; color: #10457F; }
+.stato-chip.stato-blu    .stato-dot { background: #1D6FD0; }
+
+.stato-chip.stato-grigio { background: #ECF0F6; border-color: #C4CCDA; color: #475467; }
+.stato-chip.stato-grigio .stato-dot { background: #98A2B3; }
+
 
 
 </style>
@@ -34962,12 +35302,25 @@ function setupTooltipCopy(layer, tooltipContent, layerType, layerData) {
                      `🌍 Lat: ${layerData.lat != null ? layerData.lat.toFixed(4) : '-'}\n` +
                      `🌍 Lon: ${layerData.lon != null ? layerData.lon.toFixed(4) : '-'}`;
       } else if (layerType === 'link' && layerData) {
-        // Formattazione per collegamenti
+        // Formattazione per collegamenti.
+        // Gli Id Cavo vanno copiati tutti, uno per riga: nel DB RC sono
+        // separati da +, nel DB RA da un a capo dentro la stessa cella.
+        const caviCopia = (Array.isArray(layerData.idCavoList) && layerData.idCavoList.length)
+          ? layerData.idCavoList
+          : String(layerData.idCavo || '').split(/\r?\n|\s*\+\s*/)
+              .map(c => c.trim()).filter(c => c !== '');
+        let idCavoTesto = '';
+        if (caviCopia.length === 1) {
+          idCavoTesto = `🔌 Id Cavo: ${caviCopia[0]}\n`;
+        } else if (caviCopia.length > 1) {
+          idCavoTesto = `🔌 Id Cavo:\n` + caviCopia.map(c => `   ${c}`).join('\n') + '\n';
+        }
         textToCopy = `🔗 ${layerData.id || '-'}\n` +
                      `🏞️ ${layerData.fromName || '-'} ⟶ ${layerData.toName || '-'}\n` +
                      `📏 ${layerData.distance || '-'} km\n` +
                      `🚦 ${layerData.stato || '-'}\n` +
                      `📱 ${layerData.vendor || '-'}\n` +
+                     idCavoTesto +
                      `📍 Zona: ${layerData.zona || '-'}\n` +
                      `📍 Regione: ${layerData.regione || '-'}`;
       } else {
@@ -35381,16 +35734,18 @@ function drawLinks() {
       // 🛑 Per il tooltip, usa l'ID originale se disponibile (DB MERGED), altrimenti l'ID standard
       const displayId = link._originalId || link.id || link.clli || 'N/A';
 
-      // IdCavo per tooltip (mostra ogni valore su riga separata se multipli)
+      // IdCavo per tooltip: un valore per riga.
+      // Nel DB RC i cavi sono separati da +, nel DB RA da un a capo dentro la
+      // stessa cella: qui spezzo su tutti e due, cosi' vale per entrambi.
       const idCavoRaw = link.IdCavo || '';
+      const cavi = idCavoRaw
+        ? String(idCavoRaw).split(/\r?\n|\s*\+\s*/).map(c => c.trim()).filter(c => c !== '')
+        : [];
       let idCavoTooltipHtml = '';
-      if (idCavoRaw) {
-        if (idCavoRaw.includes('+')) {
-          const cavos = idCavoRaw.split('+').map(c => c.trim());
-          idCavoTooltipHtml = '🔌 Id Cavo:<br>' + cavos.map(c => '&nbsp;&nbsp;&nbsp;' + c).join('<br>') + '<br>';
-        } else {
-          idCavoTooltipHtml = '🔌 Id Cavo: ' + idCavoRaw + '<br>';
-        }
+      if (cavi.length === 1) {
+        idCavoTooltipHtml = '🔌 Id Cavo: ' + cavi[0] + '<br>';
+      } else if (cavi.length > 1) {
+        idCavoTooltipHtml = '🔌 Id Cavo:<br>' + cavi.map(c => '&nbsp;&nbsp;&nbsp;' + c).join('<br>') + '<br>';
       }
 
       const tooltipHTML = 
@@ -35414,7 +35769,8 @@ function drawLinks() {
         vendor: vendor,
         zona: zona,
         regione: regione,
-        idCavo: idCavoRaw
+        idCavo: idCavoRaw,
+        idCavoList: cavi
       };
       setupTooltipCopy(polyline, tooltipHTML, 'link', linkData);
 
@@ -36254,6 +36610,13 @@ if (useDbRaFormat) {
     const SubPath = link.SubPath || (from && (from.SubPath || from.SubPath)) || 'N/D';
     const Prog_Ramo_Arco = link.Prog_Ramo_Arco || (from && (from.Prog_Ramo_Arco || from.Prog_Ramo_Arco)) || 'N/D';
     const IdCavo = link.IdCavo || (from && (from.IdCavo || from.IdCavo)) || 'N/D';
+    // Nella riga si mostra solo il primo cavo: l'elenco completo sta nella
+    // scheda che si apre con il bottone informazioni.
+    const caviRiga = String(IdCavo).split(/\r?\n|\s*\+\s*/)
+        .map(s => s.trim()).filter(s => s !== '');
+    const IdCavoBreve = caviRiga.length > 1
+        ? caviRiga[0] + '<span style="white-space: nowrap;"> + altri ' + (caviRiga.length - 1) + '</span>'
+        : (caviRiga[0] || 'N/D');
     
     // Stato condizionale
     const statoValue = link.stato || 'N/D';
@@ -36278,13 +36641,13 @@ if (useDbRaFormat) {
             `${clliZ} • ` +
         `</span>` +
         // KM in blu (KM_COLOR), Stato condizionale
-        `<strong style="color: ${KM_COLOR};">${km} km</strong><br/>` + 
+        `<strong style="color: ${KM_COLOR};">${km} km</strong> ${window.pastigliaStato(link.stato)}<br/>` + 
 
         // TERZA RIGA E SUCCESSIVE (Dettagli Tecnici e Posizione)
         `Arco: <strong style="color: ${ARCO_COLOR};">${Arco}</strong> [<strong>${Prog_Ramo_Arco}</strong>] • ` +
-        `Id Collegamento: <strong>${IdCollegamento_Ramo}</strong><br/>` +
+        `Id Collegamento (Ramo): <strong>${IdCollegamento_Ramo}</strong><br/>` +
         `SubPath: <strong style="color: ${SUBPATH_COLOR};">${SubPath}</strong> • ` +
-        `IdCavo: <strong>${IdCavo}</strong><br/>` +
+        `IdCavo: <strong>${IdCavoBreve}</strong><br/>` +
         
         `<small>Area: ${area} • Zona: ${zona} • Regione: ${regione}</small>`;
 
@@ -36319,26 +36682,28 @@ if (useDbRaFormat) {
     // Estrai IdCavo dal link RC
     const idCavoRaw = link.IdCavo || '';
     // Se contiene "+", mostra il primo valore + "..."
-    let idCavoDisplay = idCavoRaw;
-    if (idCavoRaw.includes('+')) {
-        const firstCavo = idCavoRaw.split('+')[0].trim();
-        idCavoDisplay = firstCavo + ' + ...';
-    }
+    // Come nel formato RA: nella riga solo il primo cavo, il resto nella scheda
+    const caviRigaRc = String(idCavoRaw).split(/\r?\n|\s*\+\s*/)
+        .map(s => s.trim()).filter(s => s !== '');
+    let idCavoDisplay = caviRigaRc.length > 1
+        ? caviRigaRc[0] + '<span style="white-space: nowrap;"> + altri ' + (caviRigaRc.length - 1) + '</span>'
+        : (caviRigaRc[0] || '');
     
     // Costruzione del nuovo layout per DB RC
     linkInfo =
         // PRIMA RIGA: Nomi (tutto grassetto e #0066CC)
         `<strong style="color: ${NAME_COLOR};">${fromName} → ${toName}${checkMark}</strong><br/>` +
 
-        // SECONDA RIGA: CLLI, ID, KM (tutto grassetto con colori specifici)
+        // SECONDA RIGA: CLLI e KM (tutto grassetto con colori specifici)
         `<strong style="font-weight: bold;">` +
           `${clliA} → ${clliZ} • ` +
-          `<span style="color: ${ID_COLOR};">${idValue}</span> • ` +
           `<span style="color: ${KM_COLOR};">${km} km</span>` +
-        `</strong><br/>` +
+        `</strong> ${window.pastigliaStato(link.stato)}<br/>` +
 
-        // TERZA RIGA: IdCavo (grassetto)
-        (idCavoRaw ? `Id Cavo: <strong>${idCavoDisplay}</strong><br/>` : '') +
+        // TERZA RIGA: SubPath e IdCavo, nello stesso ordine del formato RA
+        `SubPath: <strong style="color: ${ID_COLOR};">${idValue}</strong>` +
+        (idCavoRaw ? ` • Id Cavo: <strong>${idCavoDisplay}</strong>` : '') +
+        `<br/>` +
 
         // QUARTA RIGA: Dettagli di Posizione (small)
         `<small>Area: ${area} • Zona: ${zona} • Regione: ${regione}</small>`;
@@ -36349,6 +36714,19 @@ if (useDbRaFormat) {
 			
         label.style.cursor = 'pointer';
         label.style.flex = '1';
+
+// Bottone ℹ Informazioni complete sul collegamento
+const infoBtn = document.createElement('button');
+infoBtn.className = 'btn-info-link';
+infoBtn.type = 'button';
+infoBtn.title = 'Tutte le informazioni di questo collegamento, con copia ed esportazione in .txt';
+infoBtn.textContent = 'ℹ';
+infoBtn.addEventListener('click', function(e) {
+  e.stopPropagation();
+  if (typeof window.mostraInfoCollegamento === 'function') {
+    window.mostraInfoCollegamento(link, from, to);
+  }
+});
 
 // Bottone 🔀 Routing
 const routingBtn = document.createElement('button');
@@ -36377,9 +36755,14 @@ div.addEventListener('click', function() {
   map.fitBounds(bounds, { padding: [50, 50] });
 });
 
+        const azioni = document.createElement('div');
+        azioni.className = 'list-azioni';
+        azioni.appendChild(infoBtn);
+        azioni.appendChild(routingBtn);
+
         div.appendChild(checkbox);
         div.appendChild(label);
-        div.appendChild(routingBtn);
+        div.appendChild(azioni);
         container.appendChild(div);
       });
 
@@ -222757,6 +223140,34 @@ const roadRoute = L.polyline(coords, {
         &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Aggiornamento database del 04/09/2026</strong>. DB RA: 433 collegamenti cambiano stato (285 da DA VERIFICARE SU NNI ad ATTIVO, 59 a IN ATTIVAZIONE, 37 da ATTIVO a DA VERIFICARE SU NNI, 24 da IN ATTIVAZIONE ad ATTIVO, 15 da IN ATTIVAZIONE a DA VERIFICARE SU NNI, 8 a IN CESSAZIONE, 3 a IN REINSTRADAMENTO, 2 da IN ATTIVAZIONE a IN CESSAZIONE); rimosso il collegamento DOGLIANI - GALLO GRINZANE (PV_arco_1022 | PV_118 | APV006 | 3) e rinumerati i progressivi successivi dell'arco; corretti IdCavo e distanza del collegamento SESTO CALENDE - ANGERA<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• DB RC: aggiornata a 04/09/2026 la nota sui dati C-FOS di 758 collegamenti, 45 note di stato SubPath, 22 cambi di stato, una distanza e due IdCavo. Centrali e nodi invariati in entrambi i database<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Conteggi aggiornati: DB RA passa da 4058 a 4057 centrali e da 6652 a 6651 collegamenti. Le date in fondo alla colonna passano a 04/09/2026 per entrambi i database<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Stato del collegamento nella lista</strong>: accanto alla distanza compare una pastiglia con pallino colorato e il testo dello stato, sia nel formato DB RA sia in quello DB RC. Verde per ATTIVO, IN REINSTRADAMENTO, IN VARIAZIONE e ATTIVO &gt; SATURO; rosso per NON ATTIVO e IN ATTIVAZIONE; ambra per IN CESSAZIONE e DA VERIFICARE SU NNI; grigio per uno stato non previsto<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Il colore non è mai l'unica informazione: il testo dello stato resta scritto dentro la pastiglia, così resta leggibile anche stampando in bianco e nero. Dalla console si può scrivere <strong>NAT_STATO_TERZO = 'blu'</strong> per usare il blu al posto dell'ambra<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• La pastiglia dello stato non va più a capo: colonna di sinistra da 450 a 500 px e pastiglia più compatta (carattere da 10 a 9, margini e pallino ridotti). Misurato su tutti i collegamenti di RA e RC, nessuna riga manda più la pastiglia sulla riga successiva<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Bottone informazioni in ogni riga dei collegamenti</strong>, sopra al suggerimento routing, su DB RA, DB RC e DB RA+RC. Apre una finestra con tutti i campi del collegamento per esteso: gli Id cavo non sono più troncati ma elencati uno sotto l'altro e numerati, insieme ai dati delle due centrali (coordinate, tipo sede, area, zona, regione)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Dalla finestra si può copiare tutto negli appunti o scaricare un file .txt con lo stesso contenuto. I campi vengono letti direttamente dal collegamento, quindi un campo nuovo nel database compare da solo senza toccare il codice<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Il bottone di copia nel suggerimento dei collegamenti sulla mappa copiava tutto tranne gli Id Cavo: ora li include, uno per riga. Vale per DB RA, DB RC e DB RA+RC. Anche il suggerimento a schermo ora spezza i cavi separati dall'a capo del DB RA, che prima finivano tutti su una riga sola<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Scheda del collegamento rifatta nella veste del pannello Suggerimento Routing: intestazione blu scura, sottotesta con badge del database e identificativo in carattere a spaziatura fissa, corpo su tre colonne (collegamento, centrale A, centrale Z) e banda in fondo con gli Id cavo numerati. Finestra allargata a 1150 px, con i comandi Copia tutto e Scarica .txt nella stessa veste dei bottoni del pannello routing<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Il bottone informazioni ha ora la stessa misura esatta del bottone del suggerimento routing<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Nelle righe della lista si vede solo il primo Id cavo seguito da "+ altri N", su RA come su RC: l'elenco completo sta nella scheda<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Scheda del collegamento: righe zebrate con una velatura appena accennata, intestazioni di sezione con un accento di colore diverso l'una dall'altra (blu per gli identificativi, verde per stato e distanza, ambra per la posizione, viola per il percorso di rete) e alternanza anche nell'elenco dei cavi<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Il conteggio degli Id cavo si legge ora "3 C-FOS" invece di "3 valori", sia nella scheda sia nel testo esportato<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Scheda del collegamento: l'anagrafica della centrale viene ora cercata direttamente nel database attivo e non nella mappa interna dei nodi. Nell'anagrafica RA ci sono 1027 CLLI su 4057 con più righe e tipo sede diverso, e la mappa interna ne teneva una sola a caso: la riga giusta viene scelta facendola combaciare con il tipo sede che il collegamento dichiara per quel capo<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Formato DB RA nella lista: l'etichetta "Id Collegamento" diventa "Id Collegamento (Ramo)"<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Formato DB RC nella lista: il SubPath esce dalla riga dei CLLI e va sulla riga sotto, prima dell'Id Cavo, come già avviene nel formato RA<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• I due bottoni della riga, informazioni e suggerimento routing, sono ora affiancati in alto a destra invece che incolonnati. Non sono più sovrapposti al testo ma entrano nel flusso della riga, quindi l'Id cavo e le altre informazioni non finiscono più sotto ai bottoni<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• La colonna di sinistra passa da 500 a 560 px per compensare lo spazio che i bottoni tolgono al testo, così la pastiglia dello stato continua a non andare mai a capo<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Scheda del collegamento riorganizzata a schede separate invece di tre colonne continue: una scheda per Identificativi, una per Stato e distanza, una per Posizione, una per il Percorso di rete, una per ciascuna centrale, una per gli Id cavo, una per l'OTS e una per le note. Le schede si dispongono da sole in base allo spazio, quelle dei cavi e delle note a tutta larghezza<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Scheda del collegamento: le schede strette vengono ora impacchettate su quattro colonne che si riempiono una sotto l'altra, invece di una griglia a righe che lasciava celle vuote quando le schede avevano altezze diverse. Finestra allargata a 1420 px. Sotto i 1280 px le colonne scendono a tre, sotto i 980 a due, sotto i 660 a una<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Il badge in alto mostra il database del collegamento, DB RA o DB RC, e non più DB RA+RC quando è attivo l'unificato. In modalità unificata il database si riconosce dal prefisso dell'id del collegamento<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Anche l'anagrafica della centrale viene cercata prima nel database del collegamento: in modalità unificata un collegamento RC poteva prendere la riga di anagrafica del DB RA e mostrare un tipo sede che nel DB RC non esiste<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Scheda del collegamento: i valori lunghi, per esempio l'identificativo del DB RA, non si spezzano più su due righe accanto all'etichetta. Oltre i 22 caratteri l'etichetta va sopra e il valore prende tutta la larghezza della scheda<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• In modalità unificata non compare più la chiave interna del tipo DB1_L77_CCB035, che il tool costruisce per tenere separati i due database e che in rete non esiste. Resta il vero identificativo del collegamento<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Scheda del collegamento: lo spostamento del valore sulla riga sotto non viene più deciso contando i caratteri ma misurando, a scheda costruita, se il valore ci sta davvero accanto all'etichetta. Cifre e maiuscole non hanno la stessa larghezza, quindi il conteggio dei caratteri lasciava passare qualche caso. Vale per DB RA e DB RC<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Per i pochi identificativi del DB RA più lunghi della scheda anche a tutta larghezza, il carattere del valore viene stretto quel tanto che basta, senza scendere sotto i 9 px. Misurato su 900 schede fra DB RA, DB RC e unificato, a due larghezze di finestra: nessun valore va più a capo<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Scheda del collegamento: etichetta e valore restano sulla stessa riga. Quando il valore non ci sta si passa a un carattere stretto (Arial Narrow su Windows, l'equivalente altrove) e, se ancora non basta, lo si rimpicciolisce fino a 9 px. L'etichetta non viene mai tagliata né mandata a capo, e nemmeno accorciata<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Le colonne delle schede non sono più un numero fisso ma hanno una larghezza minima di 340 px: il browser ne mette quante ne stanno, così nessuna scheda diventa tanto stretta da costringere gli identificativi del DB RA a spezzarsi<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Il controllo conta le righe di testo davvero occupate invece di stimarle dall'altezza: con il corpo del carattere ridotto due righe possono misurare meno di due interlinee ereditate, e qualche caso passava inosservato<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Guida aggiornata</strong>: nuova legenda degli stati con le tre famiglie di colore e il significato di ciascuno stato, macro-aree portate a quattro in tutti i punti in cui erano citate, nuova voce "5b. Scheda Collegamento" nella sezione Come Usare, descrizione delle sezioni comprimibili e del bottone IT, e nota sugli Id cavo inclusi nella copia dal suggerimento sulla mappa<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Nuova numerazione delle revisioni: da Rev22.38 si passa a <strong>Rev26.09.01</strong><br/><br/>
 
         <p><strong>🆕 NOVITÀ VERSIONE Rev22.38 (25/08/2026):</strong><br/>
@@ -223140,7 +223551,7 @@ const roadRoute = L.polyline(coords, {
 
       <div class="feature-card">
         <h5>🔍 Sistema di Filtri Multi-livello</h5>
-        <p><strong>Filtro Stato (struttura presente ma non attiva in questa revisione):</strong> il modello dati supporta 5 stati operativi (ATTIVO, NON_ATTIVO, IN_ATTIVAZIONE, IN_VARIAZIONE, IN_REINSTRADAMENTO), ma per questa versione la sezione di filtro dedicata e la colorazione per stato sono volutamente disabilitate a causa di limitazioni nell’aggiornamento automatico dello stato dei collegamenti.<br/>
+        <p><strong>Filtro Stato (struttura presente ma non attiva in questa revisione):</strong> il modello dati supporta 8 stati operativi (ATTIVO, ATTIVO &gt; SATURO, NON ATTIVO, IN ATTIVAZIONE, IN VARIAZIONE, IN REINSTRADAMENTO, IN CESSAZIONE, DA VERIFICARE SU NNI), ma per questa versione la sezione di filtro dedicata e la colorazione per stato sono volutamente disabilitate a causa di limitazioni nell’aggiornamento automatico dello stato dei collegamenti.<br/>
         <strong>Filtro Area:</strong> 4 macro-aree geografiche (NORD OVEST, NORD EST, CENTRO, SUD)<br/>
         <strong>Filtro Zona:</strong> 14 zone regionali dettagliate<br/>
         <strong>Filtro Arco:</strong> Selezione per segmenti di rete specifici<br/>
@@ -223211,22 +223622,62 @@ const roadRoute = L.polyline(coords, {
         <strong>Uso:</strong> Filtraggio rapido per focus su subset specifici</p>
       </div>
 
-      <h4>📊 Legenda Stati Operativi con Colorazione</h4><br><span class="guide-warning" style="display:block;margin-top:4px;font-size:0.8rem;color:#f97316;">⚠️ Nota: lo stato operativo dei collegamenti (ATTIVO, IN_ATTIVAZIONE, IN_VARIAZIONE, NON_ATTIVO, IN_REINSTRADAMENTO) è riportato a livello di dati e colorazione, ma in questa versione del tool non viene gestito né alimentato automaticamente dai sistemi di esercizio. Le informazioni di stato hanno quindi valore puramente indicativo/esemplificativo e non devono essere utilizzate come riferimento ufficiale per decisioni operative.</span>
-      <p>Gli stati dei collegamenti sono visualizzati sia sulla mappa che nelle tabelle con codifica cromatica coerente:</p>
-      <ul>
-        <li><strong style="color: #2f8700;">🟢 ATTIVO</strong> - Collegamento operativo e in servizio normale</li>
-        <li><strong style="color: #d32f2f;">🔴 NON_ATTIVO</strong> - Collegamento disattivato o non operativo</li>
-        <li><strong style="color: #f9a825;">🟡 IN_ATTIVAZIONE</strong> - Fase di commissioning e test</li>
-        <li><strong style="color: #ff6f00;">🟠 IN_VARIAZIONE</strong> - Modifiche tecniche o upgrade in corso</li>
-        <li><strong style="color: #1976d2;">🔵 IN_REINSTRADAMENTO</strong> - Migrazione traffico verso nuovi percorsi</li>
-      </ul>
+      <h4>📊 Legenda Stati Operativi con Colorazione</h4><br><span class="guide-warning" style="display:block;margin-top:4px;font-size:0.8rem;color:#f97316;">⚠️ Nota: lo stato operativo dei collegamenti (ATTIVO, ATTIVO &gt; SATURO, IN ATTIVAZIONE, IN VARIAZIONE, IN REINSTRADAMENTO, IN CESSAZIONE, NON ATTIVO, DA VERIFICARE SU NNI) è riportato a livello di dati e colorazione, ma in questa versione del tool non viene gestito né alimentato automaticamente dai sistemi di esercizio. Le informazioni di stato hanno quindi valore puramente indicativo/esemplificativo e non devono essere utilizzate come riferimento ufficiale per decisioni operative.</span>
+      <p>Nella tabella dei collegamenti, accanto alla distanza, ogni riga porta una <strong>pastiglia colorata</strong> con il pallino e il testo dello stato. Il colore serve a scorrere la lista con l'occhio, il testo resta scritto perch&eacute; il colore da solo non deve mai essere l'unica informazione: la pastiglia si legge anche stampata in bianco e nero.</p>
+      <p>Gli stati sono raggruppati in tre famiglie, non in cinque colori diversi, cos&igrave; a colpo d'occhio si distingue subito quello che funziona da quello che non funziona e da quello che va guardato.</p>
+
+      <div class="feature-card">
+        <h5>🟢 Verde - il collegamento porta traffico</h5>
+        <p><strong>ATTIVO</strong> &bull; <strong>IN REINSTRADAMENTO</strong> &bull; <strong>IN VARIAZIONE</strong> &bull; <strong>ATTIVO &gt; SATURO</strong><br/>
+        Il collegamento &egrave; in servizio. Reinstradamento e variazione sono lavorazioni in corso su un collegamento che nel frattempo continua a portare traffico; saturo segnala che &egrave; in servizio ma senza margine di capacit&agrave;.<br/>
+        <em>Pallino #16A34A, fondo verde chiarissimo.</em></p>
+      </div>
+
+      <div class="feature-card">
+        <h5>🔴 Rosso - il collegamento non porta traffico</h5>
+        <p><strong>NON ATTIVO</strong> &bull; <strong>IN ATTIVAZIONE</strong><br/>
+        Nessun traffico. Non attivo &egrave; un collegamento censito ma spento; in attivazione &egrave; in fase di messa in esercizio e non &egrave; ancora utilizzabile.<br/>
+        <em>Pallino #DC2626, fondo rosa chiarissimo.</em></p>
+      </div>
+
+      <div class="feature-card">
+        <h5>🟡 Ambra - da guardare prima di usarlo</h5>
+        <p><strong>IN CESSAZIONE</strong> &bull; <strong>DA VERIFICARE SU NNI</strong><br/>
+        Il dato non &egrave; affidabile cos&igrave; com'&egrave;. In cessazione &egrave; un collegamento che sta per essere dismesso; da verificare su NNI significa che il dato va confermato sul sistema di esercizio prima di farci affidamento.<br/>
+        <em>Pallino #D9900A, fondo crema. L'ambra &egrave; volutamente spinta verso il giallo e non verso l'arancio, per non confonderla con il rosso a colpo d'occhio.</em></p>
+      </div>
+
+      <div class="feature-card">
+        <h5>⚪ Grigio - stato non previsto</h5>
+        <p>Qualsiasi stato che non rientra nelle tre famiglie sopra viene mostrato in grigio. Serve ad accorgersi subito se nel database compare uno stato nuovo, invece di vederlo colorato a caso.<br/>
+        <em>Pallino #98A2B3, fondo grigio chiarissimo.</em></p>
+      </div>
+
+      <div class="guide-tip">
+        <p><strong>💡 Se preferisci il blu all'ambra:</strong> apri la console del browser con F12, scrivi <code>NAT_STATO_TERZO = 'blu'</code> e poi <code>buildLinksList('')</code>. La terza famiglia passa dall'ambra al blu per la sessione corrente.</p>
+      </div>
+
+      <p><strong>Stati presenti oggi nei due database:</strong> nel DB RC si trovano ATTIVO, NON ATTIVO, IN ATTIVAZIONE, IN REINSTRADAMENTO e ATTIVO &gt; SATURO; nel DB RA ATTIVO, DA VERIFICARE SU NNI, IN ATTIVAZIONE, IN CESSAZIONE e IN REINSTRADAMENTO.</p>
+
+      <h4>🗃️ Sezioni Comprimibili e Comandi della Mappa</h4>
+      <div class="feature-card">
+        <h5>Sezioni che si aprono e si chiudono</h5>
+        <p>Le schede <strong>Filtra per Area</strong>, <strong>Filtra per Zona</strong> e <strong>Controlli mappa</strong> si comprimono e si espandono cliccando il titolo o il comando a destra dell'intestazione. Alla prima apertura del tool sono tutte chiuse, per lasciare pi&ugrave; spazio alle due tabelle. Lo stato di ciascuna resta memorizzato nel browser e viene ripristinato alla riapertura.</p>
+        <p>Anche il pannello <strong>Ricerca Indirizzo</strong> sulla mappa si comprime allo stesso modo, ed &egrave; chiuso di partenza: resta visibile solo la barra del titolo con il comando "Sposta", cos&igrave; lo si pu&ograve; comunque riposizionare.</p>
+      </div>
+      <div class="feature-card">
+        <h5>Bottone IT - vista Italia</h5>
+        <p>Riporta la mappa sull'Italia intera. L'inquadratura non usa uno zoom fisso ma si adatta allo schermo: su un monitor alto la penisola riempie la mappa, su uno pi&ugrave; basso resta comunque tutta visibile invece di essere tagliata.</p>
+      </div>
 
       <h4>🗂️ Struttura Geografica della Rete</h4>
       <div class="feature-card">
-        <h5>3 Macro-Aree</h5>
-        <p><strong>NORD:</strong> Piemonte/Valle d'Aosta (PV), Lombardia (LO), Liguria (LI), Trentino/Veneto/Friuli (NE), Emilia Romagna (ER)<br/>
-        <strong>CENTRO:</strong> Toscana (TO), Marche/Umbria (MU), Lazio (RM), Abruzzo/Molise (AM)<br/>
+        <h5>4 Macro-Aree</h5>
+        <p><strong>NORD OVEST:</strong> Piemonte/Valle d'Aosta (PV), Lombardia (LO | MILO), Liguria (LI)<br/>
+        <strong>NORD EST:</strong> Trentino/Veneto/Friuli (NE), Emilia Romagna (ER)<br/>
+        <strong>CENTRO:</strong> Toscana (TO), Marche/Umbria (MU), Lazio (RM | RMLA), Abruzzo/Molise (AM)<br/>
         <strong>SUD:</strong> Campania/Basilicata (CB), Puglia (PU), Calabria (CA), Sicilia (SI), Sardegna (SA)</p>
+        <p><em>La divisione del nord in due macro-aree avviene al momento del filtro e della visualizzazione, leggendo la zona di ogni elemento. Nel database l'area resta NORD: i dati non vengono modificati.</em></p>
       </div>
 
       <div class="feature-card">
@@ -223260,17 +223711,17 @@ const roadRoute = L.polyline(coords, {
       <div class="feature-card">
         <h5>📊 KPI Principali Visualizzabili</h5>
         <p><strong>1. Coverage Nazionale:</strong><br/>
-        • 124 Centrali distribuite su 3 macro-aree<br/>
+        • 124 Centrali distribuite su 4 macro-aree<br/>
         • Densità per area: applica filtro Area per valutare bilanciamento<br/>
         • Identificazione zone sotto-servite<br/><br/>
         <strong>2. Salute Operativa Rete:</strong><br/>
         • % Collegamenti ATTIVI vs totale<br/>
-        • Collegamenti in fase progettuale (IN_ATTIVAZIONE + IN_VARIAZIONE)<br/>
-        • Collegamenti critici (NON_ATTIVO, IN_REINSTRADAMENTO)<br/><br/>
+        • Collegamenti in fase progettuale (IN ATTIVAZIONE + IN VARIAZIONE)<br/>
+        • Collegamenti critici (NON ATTIVO, IN REINSTRADAMENTO)<br/><br/>
         <strong>3. Progetti in Corso:</strong><br/>
-        • Filtra per "IN_ATTIVAZIONE" → vedi pipeline nuovi collegamenti<br/>
-        • Filtra per "IN_VARIAZIONE" → vedi upgrade/modifiche<br/>
-        • Filtra per "IN_REINSTRADAMENTO" → vedi ottimizzazioni routing<br/><br/>
+        • Filtra per "IN ATTIVAZIONE" → vedi pipeline nuovi collegamenti<br/>
+        • Filtra per "IN VARIAZIONE" → vedi upgrade/modifiche<br/>
+        • Filtra per "IN REINSTRADAMENTO" → vedi ottimizzazioni routing<br/><br/>
         <strong>4. Distanze e Topologia:</strong><br/>
         • 8.024,40 km totali di fibra/collegamenti<br/>
         • Usa "Selezione Attuale" per subset di interesse<br/>
@@ -223300,8 +223751,8 @@ const roadRoute = L.polyline(coords, {
         <strong>Procedura:</strong><br/>
         1. Click "🔄 Reset All" per baseline pulita<br/>
         2. Osserva statistiche globali: 330 Collegamenti, 8.024 km<br/>
-        3. Filtra per "NON_ATTIVO" → conta quanti link down<br/>
-        4. Filtra per "IN_ATTIVAZIONE" → conta progetti in pipeline<br/>
+        3. Filtra per "NON ATTIVO" → conta quanti link down<br/>
+        4. Filtra per "IN ATTIVAZIONE" → conta progetti in pipeline<br/>
         5. Usa "🗺️ Zoom All" per vista geografica completa<br/>
         6. Screenshot della mappa per allegato al report<br/>
         7. Ripeti per ogni macro-area (NORD/CENTRO/SUD)<br/>
@@ -223345,7 +223796,7 @@ const roadRoute = L.polyline(coords, {
         3. Usa "Zoom Selezione" per focus su area cliente<br/>
         4. Evidenzia ridondanza: mostra percorsi alternativi<br/>
         5. Screenshot per slide deck<br/>
-        6. Mostra progetti IN_ATTIVAZIONE per roadmap futura<br/>
+        6. Mostra progetti IN ATTIVAZIONE per roadmap futura<br/>
         <strong>Output:</strong> Presentazione visual impattante</p>
       </div>
 
@@ -223432,10 +223883,10 @@ const roadRoute = L.polyline(coords, {
         • <strong>to / to_id:</strong> ID centrale di arrivo<br/>
         • <strong>from_name / to_name:</strong> Nomi testuali centrali<br/>
         • <strong>distance_km:</strong> Distanza in km (float, precisione 2 decimali)<br/>
-        • <strong>stato:</strong> Enum [ATTIVO, NON_ATTIVO, IN_ATTIVAZIONE, IN_VARIAZIONE, IN_REINSTRADAMENTO]<br/>
+        • <strong>stato:</strong> Enum [ATTIVO, NON ATTIVO, IN ATTIVAZIONE, IN VARIAZIONE, IN REINSTRADAMENTO]<br/>
         • <strong>zona:</strong> Codice zona (string, 2 caratteri)<br/>
         • <strong>regione:</strong> Nome esteso regione<br/>
-        • <strong>area:</strong> Enum [NORD, CENTRO, SUD]<br/>
+        • <strong>area:</strong> Enum [NORD, CENTRO, SUD] nel database; a schermo il NORD viene diviso in NORD OVEST e NORD EST in base alla zona<br/>
         • <strong>arco:</strong> Segmento di rete (opzionale)<br/>
         <strong>Formato Storage:</strong> Array JavaScript nativo per performance</p>
       </div>
@@ -223584,7 +224035,7 @@ const roadRoute = L.polyline(coords, {
         <strong>Step 2:</strong> Click per zoom e visualizzazione<br/>
         <strong>Step 3:</strong> Verifica distanza dichiarata vs misurata (should match)<br/>
         <strong>Step 4:</strong> Se mismatch → possibile errore configurazione routing<br/>
-        <strong>Step 5:</strong> Controlla stato: se IN_VARIAZIONE → lavori in corso<br/>
+        <strong>Step 5:</strong> Controlla stato: se IN VARIAZIONE → lavori in corso<br/>
         <strong>Step 6:</strong> Usa "Centrali COLT Vicine" per trovare bypass temporaneo<br/>
         <strong>Step 7:</strong> Misura distanza bypass con ruler<br/>
         <strong>Step 8:</strong> Valuta se latency aggiuntiva è accettabile per SLA<br/>
@@ -223615,7 +224066,7 @@ const roadRoute = L.polyline(coords, {
         <strong>Funzione:</strong> Visualizzazione geografica dei percorsi calcolati da CRO<br/>
         <strong>Dati Disponibili per Analisi:</strong><br/>
         • Percorsi RA con arco, hop, distanza totale e collegamenti<br/>
-        • Percorsi RC con stati collegamenti (ATTIVO, IN_ATTIVAZIONE, ecc.)<br/>
+        • Percorsi RC con stati collegamenti (ATTIVO, IN ATTIVAZIONE, ecc.)<br/>
         • Percorsi Unificati RA+RC con gateway evidenziati<br/>
         • Multi-Path RA: hop totali vs hop reali (es: "8 > <strong>4</strong> hop")<br/>
         <strong>Formato Tooltip Centrali:</strong><br/>
@@ -223705,7 +224156,7 @@ const roadRoute = L.polyline(coords, {
         <strong>Procedura NAT Italia:</strong><br/>
         1. Cerca Centrale A in tabella<br/>
         2. Cerca Centrale B in tabella<br/>
-        3. Verifica se collegamento già esiste (stato: IN_ATTIVAZIONE)<br/>
+        3. Verifica se collegamento già esiste (stato: IN ATTIVAZIONE)<br/>
         4. Usa ruler tool per confermare distanza progettata<br/>
         5. Clicca entrambe centrali per evidenziare posizioni<br/>
         6. Zoom per verificare percorso tra le due<br/>
@@ -223736,11 +224187,11 @@ const roadRoute = L.polyline(coords, {
         <strong>Task:</strong> Confermare collegamenti ripristinati dopo intervento<br/>
         <strong>Procedura:</strong><br/>
         1. Filtra per zona di intervento (es: "RM" per Lazio)<br/>
-        2. Filtra per stato "IN_VARIAZIONE" (collegamenti in lavoro)<br/>
+        2. Filtra per stato "IN VARIAZIONE" (collegamenti in lavoro)<br/>
         3. Identifica i link che hai lavorato oggi<br/>
         4. Verifica sulla mappa che siano evidenziati<br/>
-        5. Controlla tabella: stato dovrebbe essere IN_VARIAZIONE → ATTIVO<br/>
-        6. Se ancora IN_VARIAZIONE → segnala a coordinator per update DB<br/>
+        5. Controlla tabella: stato dovrebbe essere IN VARIAZIONE → ATTIVO<br/>
+        6. Se ancora IN VARIAZIONE → segnala a coordinator per update DB<br/>
         7. Screenshot dello stato finale per chiusura ticket<br/>
         <strong>Best Practice:</strong> Sempre confermare update DB entro 24h da intervento</p>
       </div>
@@ -223842,6 +224293,12 @@ const roadRoute = L.polyline(coords, {
         <p><strong>💡 Suggerimento:</strong> se non sei sicuro di cosa faccia un bottone, passa sopra il mouse per 1–2 secondi prima di cliccare: il tooltip ti darà un contesto immediato.</p>
       </div>
 
+      <div class="feature-card">
+        <h5>Copia dal suggerimento di un collegamento</h5>
+        <p>Passando il mouse su un collegamento disegnato sulla mappa compare un riquadro con identificativo, centrali, distanza, stato, vendor, <strong>tutti gli Id cavo uno per riga</strong>, zona e regione. L'icona di copia in alto a destra del riquadro mette lo stesso contenuto negli appunti, Id cavo compresi.</p>
+        <p>Nel DB RC i cavi sono separati da un pi&ugrave;, nel DB RA da un a capo dentro la stessa cella: il tool spezza su entrambi, quindi il comportamento &egrave; lo stesso sui due database.</p>
+      </div>
+
       <h4>🌍 Percorsi CRO Italia - Visualizzazione Geografica</h4>
       <p><strong>Posizione:</strong> Bottone "CRO" sulla mappa (a sinistra, sotto i controlli zoom)</p>
       <p><strong>Funzione:</strong> Visualizza i percorsi calcolati da CRO Italia su mappa NAT con polyline colorate e marker per ogni centrale.</p>
@@ -223888,13 +224345,13 @@ const roadRoute = L.polyline(coords, {
         <ul>
           <li><strong style="color: #2f8700;">🟢 ATTIVO</strong> - Collegamenti operativi normali. <em>Default: ON</em><br/>
           <strong>Quando deselezionare:</strong> Per focus solo su problemi/progetti</li>
-          <li><strong style="color: #d32f2f;">🔴 NON_ATTIVO</strong> - Collegamenti disattivati o fuori servizio. <em>Default: ON</em><br/>
+          <li><strong style="color: #d32f2f;">🔴 NON ATTIVO</strong> - Collegamenti disattivati o fuori servizio. <em>Default: ON</em><br/>
           <strong>Quando selezionare solo questo:</strong> Audit impianti dismessi, verifica asset</li>
-          <li><strong style="color: #f9a825;">🟡 IN_ATTIVAZIONE</strong> - Collegamenti in fase commissioning. <em>Default: ON</em><br/>
+          <li><strong style="color: #f9a825;">🟡 IN ATTIVAZIONE</strong> - Collegamenti in fase commissioning. <em>Default: ON</em><br/>
           <strong>Quando selezionare solo questo:</strong> Monitoring progetti, tracking timeline</li>
-          <li><strong style="color: #ff6f00;">🟠 IN_VARIAZIONE</strong> - Upgrade o modifiche tecniche in corso. <em>Default: ON</em><br/>
+          <li><strong style="color: #ff6f00;">🟠 IN VARIAZIONE</strong> - Upgrade o modifiche tecniche in corso. <em>Default: ON</em><br/>
           <strong>Quando selezionare solo questo:</strong> Identificare link a rischio per maintenance window</li>
-          <li><strong style="color: #1976d2;">🔵 IN_REINSTRADAMENTO</strong> - Migrazione traffico attiva. <em>Default: ON</em><br/>
+          <li><strong style="color: #1976d2;">🔵 IN REINSTRADAMENTO</strong> - Migrazione traffico attiva. <em>Default: ON</em><br/>
           <strong>Quando selezionare solo questo:</strong> Track operazioni di rete ottimization</li>
         </ul>
       </div>
@@ -223908,19 +224365,25 @@ const roadRoute = L.polyline(coords, {
 
       <h4>🏞️ 2. Filtro per Area - Segmentazione Geografica Macro</h4>
       <p><strong>Posizione:</strong> Pannello sinistro, sezione "🏞️ Filtra per Area".</p>
-      <p><strong>Funzione:</strong> Controllo visibilità per macro-aree geografiche tramite <strong>3 bottoni</strong> NORD / CENTRO / SUD. Ogni bottone agisce contemporaneamente su nodi e collegamenti.</p>
-      <p><strong>Colori:</strong> per coerenza visiva con il resto del tool, NORD usa il colore pastello del bottone "Select", SUD il verde del bottone "Tutti", mentre CENTRO utilizza un giallo/arancio pastello intermedio. Quando un'area è disattivata, il bottone torna grigio come il bottone "X" dei filtri.</p>
+      <p><strong>Funzione:</strong> Controllo visibilit&agrave; per macro-aree geografiche tramite <strong>4 bottoni</strong> NORD OVEST / NORD EST / CENTRO / SUD. Ogni bottone agisce contemporaneamente su nodi e collegamenti.</p>
+      <p><strong>Colori:</strong> per coerenza visiva con il resto del tool, le due aree del nord usano il colore pastello del bottone "Select", SUD il verde del bottone "Tutti", mentre CENTRO utilizza un giallo/arancio pastello intermedio. Quando un'area &egrave; disattivata, il bottone torna grigio come il bottone "X" dei filtri.</p>
 
       <div class="feature-card">
-        <h5>3 Macro-Aree</h5>
+        <h5>4 Macro-Aree</h5>
         <ul>
-          <li><strong>NORD</strong> - Include zone: PV, LO, LI, NE, ER<br/>
-          Copertura: Piemonte, Valle d'Aosta, Lombardia, Liguria, Trentino, Veneto, Friuli, Emilia Romagna</li>
-          <li><strong>CENTRO</strong> - Include zone: TO, MU, RM, AM<br/>
+          <li><strong>NORD OVEST</strong> - Include zone: PV, LO | MILO, LI<br/>
+          Copertura: Piemonte, Valle d'Aosta, Lombardia, Liguria</li>
+          <li><strong>NORD EST</strong> - Include zone: NE, ER<br/>
+          Copertura: Trentino, Veneto, Friuli, Emilia Romagna</li>
+          <li><strong>CENTRO</strong> - Include zone: TO, MU, RM | RMLA, AM<br/>
           Copertura: Toscana, Marche, Umbria, Lazio, Abruzzo, Molise</li>
           <li><strong>SUD</strong> - Include zone: CB, SA, PU, CA, SI<br/>
           Copertura: Campania, Basilicata, Puglia, Calabria, Sicilia, Sardegna</li>
         </ul>
+      </div>
+
+      <div class="guide-warning">
+        <p><strong>⚠️ Come viene deciso il nord ovest o il nord est:</strong> il database conosce una sola area NORD. La divisione viene fatta dal tool leggendo la zona di ogni elemento, nel momento in cui filtra o scrive una riga di lista. Un elemento del nord con una zona non prevista fra quelle elencate resta visibile finch&eacute; almeno uno dei due bottoni del nord &egrave; acceso, cos&igrave; nessun dato pu&ograve; sparire perch&eacute; &egrave; comparsa una zona nuova.</p>
       </div>
 
       <div class="guide-tip">
@@ -223938,7 +224401,8 @@ const roadRoute = L.polyline(coords, {
 
       <div class="feature-card">
         <h5>Zone Disponibili (Codici a 2 Lettere)</h5>
-        <p><strong>NORD:</strong> PV (Piemonte/VdA) • LO (Lombardia) • LI (Liguria) • NE (Nord-Est) • ER (Emilia Romagna)<br/>
+        <p><strong>NORD OVEST:</strong> PV (Piemonte/VdA) • LO | MILO (Lombardia) • LI (Liguria)<br/>
+          <strong>NORD EST:</strong> NE (Trentino/Veneto/Friuli) • ER (Emilia Romagna)<br/>
         <strong>CENTRO:</strong> TO (Toscana) • MU (Marche/Umbria) • RM (Lazio) • AM (Abruzzo/Molise)<br/>
         <strong>SUD:</strong> CB (Campania/Basilicata) • SA (Sardegna) • PU (Puglia) • CA (Calabria) • SI (Sicilia)</p>
       </div>
@@ -224009,12 +224473,17 @@ const roadRoute = L.polyline(coords, {
         <h5>Informazioni per Ogni Collegamento</h5>
         <p><strong>Linea 1:</strong> <span style="color: var(--tim-blue);">ID</span> – <strong>Centrale A → Centrale B</strong> <em>✓ (se selezionato)</em><br/>
         <strong>Linea 2:</strong> <span style="color: #8a0101;">Distanza km</span> • Zona • Regione • <strong style="color: varies;">Stato</strong><br/>
-        <strong>Colorazione Stato:</strong><br/>
-        • <span style="color: #2f8700;">Verde</span> = ATTIVO<br/>
-        • <span style="color: #d32f2f;">Rosso</span> = NON_ATTIVO<br/>
-        • <span style="color: #f9a825;">Giallo</span> = IN_ATTIVAZIONE<br/>
-        • <span style="color: #ff6f00;">Arancione</span> = IN_VARIAZIONE<br/>
-        • <span style="color: #1976d2;">Blu</span> = IN_REINSTRADAMENTO</p>
+        <strong>Pastiglia dello stato:</strong> subito dopo la distanza, con pallino colorato e testo. Verde per ATTIVO, IN REINSTRADAMENTO, IN VARIAZIONE e ATTIVO &gt; SATURO; rosso per NON ATTIVO e IN ATTIVAZIONE; ambra per IN CESSAZIONE e DA VERIFICARE SU NNI; grigio per uno stato non previsto. La legenda completa &egrave; nella scheda Panoramica.<br/>
+        <strong>Id cavo:</strong> nella riga compare solo il primo, seguito da "+ altri N" quando ce ne sono pi&ugrave; d'uno. L'elenco completo si apre con il bottone ℹ.<br/>
+        <strong>Formato DB RA:</strong> Arco e Id Collegamento (Ramo) sulla terza riga, SubPath e IdCavo sulla quarta.<br/>
+        <strong>Formato DB RC:</strong> SubPath e Id Cavo sulla terza riga, nello stesso ordine del formato RA.</p>
+      </div>
+
+      <div class="feature-card">
+        <h5>I due bottoni di ogni riga</h5>
+        <p>In alto a destra, sulla stessa riga dei nomi delle centrali, ogni collegamento ha due bottoni della stessa misura.<br/>
+        <strong>ℹ Scheda collegamento:</strong> apre la finestra con tutte le informazioni per esteso. Vedi il punto dedicato qui sotto.<br/>
+        <strong>🔀 Suggerimento routing:</strong> mostra i collegamenti adiacenti al CLLI A e al CLLI Z, per costruire un percorso passo passo.</p>
       </div>
 
       <div class="feature-card">
@@ -224034,6 +224503,31 @@ const roadRoute = L.polyline(coords, {
         4. Click "Select" (azzurro) → vedi solo quelli selezionati<br/>
         5. Click "🔍 Zoom Selezione" → mappa si centra su subset<br/>
         <strong>Risultato:</strong> Vista focalizzata su collegamenti attivi nel Lazio</p>
+      </div>
+
+      <h4>ℹ 5b. Scheda Collegamento - Tutte le Informazioni per Esteso</h4>
+      <p><strong>Come si apre:</strong> bottone ℹ in alto a destra di ogni riga della tabella collegamenti. Funziona su DB RA, DB RC e DB RA+RC.</p>
+      <p><strong>A cosa serve:</strong> nella riga della tabella lo spazio &egrave; poco e alcuni campi vengono accorciati, a partire dagli Id cavo. Nella scheda non c'&egrave; niente di accorciato: tutti i campi del collegamento, tutti gli Id cavo uno sotto l'altro e numerati, e l'anagrafica delle due centrali con coordinate e tipo sede.</p>
+
+      <div class="feature-card">
+        <h5>Com'&egrave; fatta</h5>
+        <ul>
+          <li><strong>Intestazione:</strong> badge del database di provenienza del collegamento (DB RA o DB RC, mai l'unificato), identificativo in carattere a spaziatura fissa, e la rotta centrale A &rarr; centrale Z a destra.</li>
+          <li><strong>Schede separate:</strong> Identificativi, Stato e distanza, Posizione, Percorso di rete, Id cavo, OTS, Centrale A, Centrale Z e Note. Ognuna con il suo accento di colore.</li>
+          <li><strong>Nelle due centrali:</strong> prima i dati dichiarati dal collegamento, poi l'anagrafica letta dal database. Servono a confrontarli: se non coincidono, il dato va guardato.</li>
+          <li><strong>In fondo:</strong> quanti campi sono valorizzati e quanti C-FOS ha il collegamento.</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <h5>Copia ed esportazione</h5>
+        <p><strong>Copia tutto:</strong> mette negli appunti l'intera scheda in testo semplice, divisa per sezioni, pronta da incollare in una mail o in un file di testo.<br/>
+        <strong>Scarica .txt:</strong> salva lo stesso identico contenuto in un file chiamato con l'identificativo del collegamento, per esempio <code>NAT_collegamento_CAM002.txt</code>.<br/>
+        La finestra si chiude con la X, con il tasto Esc o cliccando fuori.</p>
+      </div>
+
+      <div class="guide-warning">
+        <p><strong>⚠️ Sul tipo sede:</strong> nell'anagrafica del DB RA ci sono 1027 CLLI su 4057 che compaiono su pi&ugrave; righe con tipo sede diverso. La scheda sceglie la riga che corrisponde al tipo sede dichiarato dal collegamento per quel capo. Se il collegamento non dichiara un tipo sede, come nel DB RC, viene presa la prima riga con coordinate valide.</p>
       </div>
 
       <h4>🌐 6. Tabella Centrali/Nodi - Navigazione per Sede</h4>
@@ -225844,10 +226338,10 @@ function downloadGuidePDF() {
           </li>
           <li><strong>Colori di Stato (Collegamenti)</strong><br/>
             <code>#2f8700</code> – stato <em>ATTIVO</em><br/>
-            <code>#d32f2f</code> – stato <em>NON_ATTIVO</em><br/>
-            <code>#f9a825</code> – stato <em>IN_ATTIVAZIONE</em><br/>
-            <code>#ff6f00</code> – stato <em>IN_VARIAZIONE</em><br/>
-            <code>#1976d2</code> – stato <em>IN_REINSTRADAMENTO</em>
+            <code>#d32f2f</code> – stato <em>NON ATTIVO</em><br/>
+            <code>#f9a825</code> – stato <em>IN ATTIVAZIONE</em><br/>
+            <code>#ff6f00</code> – stato <em>IN VARIAZIONE</em><br/>
+            <code>#1976d2</code> – stato <em>IN REINSTRADAMENTO</em>
           </li>
         </ul>
       </div>
@@ -228889,10 +229383,10 @@ window.addZoomToSelectionControl = function(map) {
   function _statoColor(stato) {
     const s = (stato || '').toUpperCase();
     if (s === 'ATTIVO')          return '#2f8700';
-    if (s === 'NON_ATTIVO')      return '#d32f2f';
-    if (s === 'IN_ATTIVAZIONE')  return '#f9a825';
-    if (s === 'IN_VARIAZIONE')   return '#ff6f00';
-    if (s === 'IN_REINSTRADAMENTO') return '#1976d2';
+    if (s === 'NON ATTIVO')      return '#d32f2f';
+    if (s === 'IN ATTIVAZIONE')  return '#f9a825';
+    if (s === 'IN VARIAZIONE')   return '#ff6f00';
+    if (s === 'IN REINSTRADAMENTO') return '#1976d2';
     if (s === 'CESSATO' || s === 'RISERVA') return '#b91c1c';
     return '#6b7280';
   }
@@ -229544,6 +230038,647 @@ window.addZoomToSelectionControl = function(map) {
   } else {
     attendi();
   }
+})();
+</script>
+
+<script>
+
+// ══════════════════════════════════════════════════════════════════════════════
+// [JS-012] STATO DEL COLLEGAMENTO: PASTIGLIA COLORATA NELLE LISTE
+//   verde  -> ATTIVO, IN REINSTRADAMENTO, IN VARIAZIONE, ATTIVO > SATURO
+//   rosso  -> NON ATTIVO, IN ATTIVAZIONE
+//   ambra  -> IN CESSAZIONE, DA VERIFICARE SU NNI
+// Per usare il blu al posto dell'ambra, dalla console: NAT_STATO_TERZO = 'blu'
+// ══════════════════════════════════════════════════════════════════════════════
+window.NAT_STATO_TERZO = window.NAT_STATO_TERZO || 'ambra';
+
+window.STATI_VERDI = ['ATTIVO', 'IN REINSTRADAMENTO', 'IN VARIAZIONE', 'ATTIVO > SATURO'];
+window.STATI_ROSSI = ['NON ATTIVO', 'IN ATTIVAZIONE'];
+window.STATI_TERZI = ['IN CESSAZIONE', 'DA VERIFICARE SU NNI'];
+
+window.normalizzaStato = function(v) {
+  if (v === null || v === undefined) return '';
+  return String(v).toUpperCase().replace(/\s*>\s*/g, ' > ').replace(/\s+/g, ' ').trim();
+};
+
+window.classeStato = function(v) {
+  const s = window.normalizzaStato(v);
+  if (!s || s === 'N/D') return 'stato-grigio';
+  if (window.STATI_VERDI.indexOf(s) >= 0) return 'stato-verde';
+  if (window.STATI_ROSSI.indexOf(s) >= 0) return 'stato-rosso';
+  if (window.STATI_TERZI.indexOf(s) >= 0) {
+    return window.NAT_STATO_TERZO === 'blu' ? 'stato-blu' : 'stato-ambra';
+  }
+  return 'stato-grigio';
+};
+
+// Pastiglia pronta da infilare nell'HTML della riga
+window.pastigliaStato = function(v) {
+  const s = window.normalizzaStato(v) || 'N/D';
+  const cls = window.classeStato(v);
+  const testo = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return '<span class="stato-chip ' + cls + '" title="Stato del collegamento: ' + testo + '">'
+       + '<span class="stato-dot"></span>' + testo + '</span>';
+};
+</script>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// [JS-013] SCHEDA TECNICA DEL COLLEGAMENTO
+// Finestra di dettaglio con tutti i campi per esteso, divisi in colonne:
+// collegamento, centrale A, centrale Z, piu' una banda in fondo per gli Id cavo
+// e le note lunghe. Copia negli appunti ed esportazione in .txt.
+// Funziona su DB RA, DB RC e DB RA+RC: i campi vengono letti dall'oggetto del
+// collegamento, quindi un campo nuovo nel database compare da solo.
+// ══════════════════════════════════════════════════════════════════════════════
+(function () {
+  'use strict';
+
+  var ETICHETTE = {
+    id: 'Id collegamento', _originalId: 'Id collegamento', vendor: 'Vendor',
+    stato: 'Stato', km: 'Distanza (km)', distance_km: 'Distanza calcolata (km)',
+    area: 'Area', zona: 'Zona', regione: 'Regione',
+    Arco: 'Arco', Prog_Ramo_Arco: 'Progressivo', IdCollegamento_Ramo: 'Id ramo',
+    SubPath: 'SubPath', IdCavo: 'Id cavo', OTS: 'OTS',
+    Altro1: 'Nota 1', Altro2: 'Nota 2',
+    fromName: 'Nome', from: 'CLLI', TipoSedeA: 'Tipo sede (link)',
+    toName: 'Nome', to: 'CLLI', TipoSedeZ: 'Tipo sede (link)'
+  };
+
+  // Come si raggruppano i campi nella colonna di sinistra
+  var GRUPPI = [
+    ['Identificativi', ['id', '_originalId', 'vendor'], 'g-ident'],
+    ['Stato e distanza', ['stato', 'km', 'distance_km'], 'g-stato'],
+    ['Posizione', ['area', 'zona', 'regione'], 'g-pos'],
+    ['Percorso di rete', ['Arco', 'Prog_Ramo_Arco', 'IdCollegamento_Ramo', 'SubPath'], 'g-rete']
+  ];
+  var CAMPI_A = ['fromName', 'from', 'TipoSedeA'];
+  var CAMPI_Z = ['toName', 'to', 'TipoSedeZ'];
+  var CAMPI_BANDA = ['IdCavo', 'OTS', 'Altro1', 'Altro2'];
+  var MULTIVALORE = ['IdCavo', 'OTS', 'SubPath'];
+  var MONO = ['id', '_originalId', 'from', 'to', 'from_id', 'to_id', 'Arco',
+              'IdCollegamento_Ramo', 'SubPath', 'IdCavo', 'OTS', 'clli'];
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function pezzi(v) {
+    return String(v).split(/\r?\n|\s*\+\s*/)
+                    .map(function (x) { return x.trim(); })
+                    .filter(function (x) { return x !== ''; });
+  }
+
+  // Come si chiamano gli elementi contati nella banda in fondo
+  var UNITA = { IdCavo: 'C-FOS', OTS: 'OTS', SubPath: 'SubPath' };
+  function unita(k) { return UNITA[k] || 'valori'; }
+
+  function vuoto(v) { return v === null || v === undefined || v === ''; }
+
+  // Campi che non hanno senso a schermo.
+  //   distance_km: si mostra solo se diversa dalla distanza dichiarata
+  //   id: in modalita' unificata il tool costruisce una chiave interna del tipo
+  //       DB1_L77_CCB035, che non esiste in rete. Il vero identificativo e'
+  //       _originalId, quindi quando c'e' la chiave interna non si mostra.
+  function campoNascosto(link, k) {
+    if (k === 'distance_km') return String(link.distance_km) === String(link.km);
+    if (k === 'id') return !vuoto(link._originalId);
+    return false;
+  }
+  function etichetta(k) { return ETICHETTE[k] || k; }
+
+  // L'area del collegamento va mostrata suddivisa (NORD OVEST / NORD EST) come
+  // nelle righe della lista e nei filtri, non com'e' scritta nel database.
+  function valore(link, k) {
+    if (k === 'area' && window.areaEffettiva) {
+      return window.areaEffettiva({ area: link.area, zona: link.zona }) || link.area;
+    }
+    return link[k];
+  }
+
+  // Campi del collegamento, senza doppioni e senza campi di servizio
+  function campiUtili(link) {
+    var usati = [];
+    function aggiungi(k) {
+      if (usati.indexOf(k) < 0 && Object.prototype.hasOwnProperty.call(link, k)) usati.push(k);
+    }
+    GRUPPI.forEach(function (g) {
+      g[1].forEach(function (k) { if (!campoNascosto(link, k)) aggiungi(k); });
+    });
+    CAMPI_A.forEach(aggiungi);
+    CAMPI_Z.forEach(aggiungi);
+    CAMPI_BANDA.forEach(aggiungi);
+
+    var altri = [];
+    Object.keys(link).forEach(function (k) {
+      if (usati.indexOf(k) >= 0) return;
+      if (k.charAt(0) === '_') return;
+      if (typeof link[k] === 'function') return;
+      if (link[k] !== null && typeof link[k] === 'object') return;
+      if (campoNascosto(link, k)) return;
+      // alias creati dal tool: stesso nome in minuscolo o stesso valore
+      var doppione = usati.concat(altri).some(function (g) {
+        return (g.toLowerCase() === k.toLowerCase() ||
+                g.toLowerCase() === k.toLowerCase().replace(/_id$/, '')) &&
+               String(link[g]) === String(link[k]);
+      });
+      if (doppione) return;
+      altri.push(k);
+    });
+    return { usati: usati, altri: altri };
+  }
+
+  // L'anagrafica ha piu' righe con lo stesso CLLI e tipo sede diverso: 1027
+  // CLLI su 4057 nel DB RA. La mappa interna nodesById ne tiene una sola, quindi
+  // qui la riga giusta la cerco a mano nel database, facendola combaciare anche
+  // con il tipo sede che il collegamento dichiara per quel capo.
+  // Da quale database viene il collegamento. In modalita' unificata l'id porta
+  // il prefisso DB1_ o DB2_, quindi il database si riconosce dal collegamento
+  // stesso e non da quello attivo.
+  function dbDelLink(link) {
+    var raw = String((link && link.id) || '');
+    if (/^DB1[_-]/i.test(raw)) return { codice: 'DB1', nome: 'DB RC', classe: 'rc' };
+    if (/^DB2[_-]/i.test(raw)) return { codice: 'DB2', nome: 'DB RA', classe: 'ra' };
+    var attivo = window.DB_STATE && window.DB_STATE.currentDB;
+    if (attivo === 'DB2') return { codice: 'DB2', nome: 'DB RA', classe: 'ra' };
+    if (attivo === 'DB1') return { codice: 'DB1', nome: 'DB RC', classe: 'rc' };
+    // unificato senza prefisso: i campi di percorso esistono solo nel DB RA
+    if (link && (link.Arco || link.SubPath || link.IdCollegamento_Ramo)) {
+      return { codice: 'DB2', nome: 'DB RA', classe: 'ra' };
+    }
+    return { codice: 'DB1', nome: 'DB RC', classe: 'rc' };
+  }
+
+  function listeNodi(codice) {
+    var s = window.DB_STATE || {};
+    if (codice === 'DB2') return [s.db2_nodes, s.db1_nodes];
+    if (codice === 'DB1') return [s.db1_nodes, s.db2_nodes];
+    var db = s.currentDB;
+    if (db === 'DB2') return [s.db2_nodes];
+    if (db === 'MERGED') return [s.db2_nodes, s.db1_nodes];
+    return [s.db1_nodes];
+  }
+
+  // Cerca prima nel database del collegamento; le altre liste restano solo come
+  // rete di sicurezza, se il CLLI li' non ci fosse.
+  function anagrafica(clli, tipoSedeDichiarato, ripiego, codice) {
+    if (!clli) return ripiego || null;
+    var liste = listeNodi(codice);
+    for (var l = 0; l < liste.length; l++) {
+      var trovato = cercaInLista(liste[l], clli, tipoSedeDichiarato);
+      if (trovato) return trovato;
+    }
+    return ripiego || null;
+  }
+
+  function cercaInLista(lista, clli, tipoSedeDichiarato) {
+    if (!Array.isArray(lista)) return null;
+    var candidati = [];
+    (function () {
+      lista.forEach(function (n) {
+        if (n && String(n.clli) === String(clli)) candidati.push(n);
+      });
+    })();
+    if (!candidati.length) return null;
+    if (candidati.length === 1) return candidati[0];
+    if (!vuoto(tipoSedeDichiarato)) {
+      for (var i = 0; i < candidati.length; i++) {
+        if (String(candidati[i].TipoSede) === String(tipoSedeDichiarato)) return candidati[i];
+      }
+    }
+    // nessuna riga combacia con il tipo sede: prendo la prima con coordinate
+    for (var j = 0; j < candidati.length; j++) {
+      if (candidati[j].lat && candidati[j].lon) return candidati[j];
+    }
+    return candidati[0];
+  }
+
+  // ── Costruzione dell'HTML ─────────────────────────────────────────────────
+  // Contatore per l'alternanza delle righe, azzerato a ogni colonna
+  var nRiga = 0;
+  function azzeraZebra() { nRiga = 0; }
+  function zebra() { return (nRiga++ % 2) ? ' z-pari' : ''; }
+
+  function riga(et, valore, mono) {
+    var z = zebra();
+    if (vuoto(valore)) {
+      return '<div class="il-riga' + z + '"><div class="il-et">' + esc(et) +
+             '</div><div class="il-val vuoto">non valorizzato</div></div>';
+    }
+    return '<div class="il-riga' + z + '"><div class="il-et">' + esc(et) +
+           '</div><div class="il-val' + (mono ? ' mono' : '') + '">' + esc(String(valore)) +
+           '</div></div>';
+  }
+
+  // A scheda costruita misuro ogni valore: se accanto all'etichetta non ci sta,
+  // lo sposto sulla riga sotto, dove ha tutta la larghezza della scheda.
+  // Contare i caratteri non basta, perche' le cifre e le lettere maiuscole non
+  // hanno la stessa larghezza.
+  // Scaletta di ripieghi quando il valore non ci sta accanto all'etichetta.
+  // Prima si passa a un carattere stretto, poi lo si rimpicciolisce.
+  // L'etichetta non viene mai toccata ne' tagliata.
+  var SCALA = [
+    { stretto: true,  corpo: '' },
+    { stretto: true,  corpo: '11px' },
+    { stretto: true,  corpo: '10.5px' },
+    { stretto: true,  corpo: '10px' },
+    { stretto: true,  corpo: '9.5px' },
+    { stretto: true,  corpo: '9px' }
+  ];
+
+  // Quante righe di testo occupa davvero il valore. Confrontare l'altezza con la
+  // interlinea non basta: se il corpo del carattere e' stato ridotto, due righe
+  // possono misurare meno di due interlinee ereditate. Qui conto le righe vere.
+  function nRigheTesto(v) {
+    try {
+      var r = document.createRange();
+      r.selectNodeContents(v);
+      var rects = r.getClientRects();
+      var cime = [];
+      for (var i = 0; i < rects.length; i++) {
+        if (rects[i].width <= 0 && rects[i].height <= 0) continue;
+        var t = rects[i].top;
+        var nuova = true;
+        for (var j = 0; j < cime.length; j++) {
+          if (Math.abs(cime[j] - t) <= 2) { nuova = false; break; }
+        }
+        if (nuova) cime.push(t);
+      }
+      return cime.length || 1;
+    } catch (e) {
+      return 1;
+    }
+  }
+
+  function suUnaRiga(v) { return nRigheTesto(v) <= 1; }
+
+  // La riga dello stato contiene la pastiglia, non testo semplice: il conteggio
+  // delle righe non vale e non c'e' niente da adattare.
+  function soloTesto(v) {
+    for (var i = 0; i < v.childNodes.length; i++) {
+      if (v.childNodes[i].nodeType !== 3) return false;
+    }
+    return true;
+  }
+
+  function sistemaRighe(contenitore) {
+    if (!contenitore) return;
+    var righe = contenitore.querySelectorAll('.il-riga');
+    var i, v;
+
+    // Riporto tutto allo stato di partenza
+    for (i = 0; i < righe.length; i++) {
+      righe[i].classList.remove('il-riga-alta');
+      v = righe[i].querySelector('.il-val');
+      if (!v) continue;
+      v.classList.remove('stretto');
+      v.style.fontSize = '';
+    }
+
+    // Chi occupa piu' di una riga di testo va sistemato
+    var daSistemare = [];
+    for (i = 0; i < righe.length; i++) {
+      v = righe[i].querySelector('.il-val');
+      if (v && soloTesto(v) && !suUnaRiga(v)) daSistemare.push(v);
+    }
+
+    for (i = 0; i < daSistemare.length; i++) {
+      v = daSistemare[i];
+      var risolto = false;
+      for (var s = 0; s < SCALA.length; s++) {
+        if (SCALA[s].stretto) v.classList.add('stretto');
+        v.style.fontSize = SCALA[s].corpo;
+        if (suUnaRiga(v)) { risolto = true; break; }
+      }
+      // Ultima risorsa: etichetta sopra e valore sotto, a tutta larghezza
+      if (!risolto) v.parentNode.classList.add('il-riga-alta');
+    }
+  }
+
+  function rigaStato(v) {
+    var chip = (typeof window.pastigliaStato === 'function')
+      ? window.pastigliaStato(v) : esc(v || 'N/D');
+    return '<div class="il-riga' + zebra() + '"><div class="il-et">Stato</div>' +
+           '<div class="il-val">' + chip + '</div></div>';
+  }
+
+  // Ogni blocco di informazioni sta in una scheda a se'
+  function scheda(titolo, classe, contenuto, opzioni) {
+    opzioni = opzioni || {};
+    if (!contenuto) return '';
+    var conta = opzioni.conta
+      ? '<span class="il-conta">' + esc(opzioni.conta) + '</span>' : '';
+    return '<section class="il-card">' +
+             '<h4 class="il-card-head ' + classe + '">' + esc(titolo) + conta + '</h4>' +
+             '<div class="il-card-body">' + contenuto + '</div>' +
+           '</section>';
+  }
+
+  function schedaNodo(titolo, classe, link, campiLink, nodo) {
+    azzeraZebra();
+    var html = '<div class="il-sotto">Dati dichiarati dal collegamento</div>';
+    campiLink.forEach(function (k) {
+      if (!Object.prototype.hasOwnProperty.call(link, k)) return;
+      html += riga(etichetta(k), link[k], MONO.indexOf(k) >= 0);
+    });
+    html += '<div class="il-sotto">Anagrafica centrale</div>';
+    if (nodo) {
+      if (nodo.name) html += riga('Nome', nodo.name, false);
+      if (nodo.clli) html += riga('CLLI', nodo.clli, true);
+      if (nodo.lat !== undefined && nodo.lon !== undefined) {
+        html += riga('Latitudine', nodo.lat, true);
+        html += riga('Longitudine', nodo.lon, true);
+      }
+      var area = window.areaEffettiva ? window.areaEffettiva(nodo) : (nodo.Area || nodo.area);
+      if (area) html += riga('Area', area, false);
+      var zona = nodo.Zona || nodo.zona;
+      if (zona) html += riga('Zona', zona, false);
+      var reg = nodo.Regione || nodo.regione;
+      if (reg) html += riga('Regione', reg, false);
+      if (!vuoto(nodo.TipoSede)) html += riga('Tipo sede', nodo.TipoSede, false);
+    } else {
+      html += '<div class="il-nota-blocco"><span class="il-val vuoto">' +
+              'centrale non trovata in anagrafica</span></div>';
+    }
+    return scheda(titolo, classe, html);
+  }
+
+  // Cavi, OTS e note: ognuno nella sua scheda a tutta larghezza
+  function schedeBanda(link, campi) {
+    var html = '';      // schede strette, entrano nel flusso a colonne
+    var note = '';
+    campi.forEach(function (k) {
+      if (!Object.prototype.hasOwnProperty.call(link, k)) return;
+      var v = link[k];
+      if (vuoto(v)) return;
+      var multi = MULTIVALORE.indexOf(k) >= 0;
+      if (multi) {
+        var p = pezzi(v);
+        if (!p.length) return;
+        var elenco = '<ul class="il-cavi">' + p.map(function (x, i) {
+          return '<li><span class="n">' + (i + 1) + '.</span><span>' + esc(x) + '</span></li>';
+        }).join('') + '</ul>';
+        html += scheda(etichetta(k), 'g-cavi', elenco,
+                       { conta: p.length + ' ' + unita(k) });
+      } else {
+        note += '<div class="il-nota-blocco"><span class="il-et">' + esc(etichetta(k)) +
+                '</span><span class="il-val">' + esc(v) + '</span></div>';
+      }
+    });
+    return { strette: html, larghe: note ? scheda('Note', 'g-note', note) : '' };
+  }
+
+  // ── Testo per copia ed esportazione ───────────────────────────────────────
+  function testoPiano(link, from, to, rotta, nomeDatabase) {
+    var c = campiUtili(link);
+    var linea = '==============================================================';
+    var sub = '--------------------------------------------------------------';
+    var r = [];
+    r.push(linea);
+    r.push('NAT ITALIA - SCHEDA COLLEGAMENTO');
+    r.push('Rotta            : ' + rotta);
+    r.push('Database         : ' + nomeDatabase);
+    r.push('Estratto il      : ' + new Date().toLocaleString('it-IT'));
+    r.push(linea);
+
+    function voceEt(testo, valore, multi, unitaTesto) {
+      unitaTesto = unitaTesto || 'valori';
+      var et = testo;
+      while (et.length < 24) et += ' ';
+      if (vuoto(valore)) { r.push('  ' + et + ': (non valorizzato)'); return; }
+      var p = multi ? pezzi(valore) : [String(valore)];
+      if (p.length <= 1) { r.push('  ' + et + ': ' + p[0]); return; }
+      r.push('  ' + et + ': ' + p.length + ' ' + unitaTesto);
+      p.forEach(function (x, i) { r.push('      ' + (i + 1) + '. ' + x); });
+    }
+
+    function voce(k, valore) {
+      voceEt(etichetta(k), valore, MULTIVALORE.indexOf(k) >= 0, unita(k));
+    }
+
+    GRUPPI.forEach(function (g) {
+      var presenti = g[1].filter(function (k) {
+        return Object.prototype.hasOwnProperty.call(link, k) && !campoNascosto(link, k);
+      });
+      if (!presenti.length) return;
+      r.push('[' + g[0].toUpperCase() + ']');
+      presenti.forEach(function (k) { voce(k, valore(link, k)); });
+      r.push('');
+    });
+
+    [['CENTRALE A', CAMPI_A, from], ['CENTRALE Z', CAMPI_Z, to]].forEach(function (blocco) {
+      r.push('[' + blocco[0] + ']');
+      blocco[1].forEach(function (k) {
+        if (Object.prototype.hasOwnProperty.call(link, k)) voce(k, link[k]);
+      });
+      var n = blocco[2];
+      if (n) {
+        if (n.name) voceEt('Nome in anagrafica', n.name, false);
+        if (n.clli) voceEt('CLLI in anagrafica', n.clli, false);
+        if (n.lat !== undefined) voceEt('Latitudine', n.lat, false);
+        if (n.lon !== undefined) voceEt('Longitudine', n.lon, false);
+        var area = window.areaEffettiva ? window.areaEffettiva(n) : (n.Area || n.area);
+        if (area) voceEt('Area', area, false);
+        if (n.Zona || n.zona) voceEt('Zona', n.Zona || n.zona, false);
+        if (n.Regione || n.regione) voceEt('Regione', n.Regione || n.regione, false);
+        if (!vuoto(n.TipoSede)) voceEt('Tipo sede', n.TipoSede, false);
+      } else {
+        r.push('  centrale non trovata in anagrafica');
+      }
+      r.push('');
+    });
+
+    var haBanda = CAMPI_BANDA.some(function (k) {
+      return Object.prototype.hasOwnProperty.call(link, k) && !vuoto(link[k]);
+    });
+    if (haBanda) {
+      r.push('[CAVI E NOTE]');
+      CAMPI_BANDA.forEach(function (k) {
+        if (Object.prototype.hasOwnProperty.call(link, k) && !vuoto(link[k])) voce(k, link[k]);
+      });
+      r.push('');
+    }
+
+    if (c.altri.length) {
+      r.push('[ALTRI CAMPI]');
+      c.altri.forEach(function (k) { voce(k, link[k]); });
+      r.push('');
+    }
+
+    r.push(sub);
+    return r.join('\n');
+  }
+
+  // ── Finestra ──────────────────────────────────────────────────────────────
+  var overlay = null, corpo = null, correnti = null, esito = null;
+
+  function costruisci() {
+    if (overlay) return;
+    overlay = document.createElement('div');
+    overlay.id = 'info-link-overlay';
+    overlay.innerHTML =
+      '<div id="info-link-card" role="dialog" aria-modal="true" aria-label="Scheda del collegamento">' +
+        '<div class="il-head">' +
+          '<h3 id="il-titolo">Scheda collegamento</h3>' +
+          '<button type="button" class="il-close" title="Chiudi (Esc)">&#10005;</button>' +
+        '</div>' +
+        '<div class="il-sub">' +
+          '<span class="rp-db-badge" id="il-db"></span>' +
+          '<span class="il-id" id="il-idcoll"></span>' +
+          '<span class="il-rotta" id="il-rotta"></span>' +
+        '</div>' +
+        '<div class="il-body" id="il-body"></div>' +
+        '<div class="il-foot">' +
+          '<button type="button" class="il-btn primario" id="il-copia">Copia tutto</button>' +
+          '<button type="button" class="il-btn" id="il-txt">Scarica .txt</button>' +
+          '<span class="il-esito" id="il-esito"></span>' +
+          '<span class="il-riepilogo" id="il-riepilogo"></span>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    corpo = overlay.querySelector('#il-body');
+    esito = overlay.querySelector('#il-esito');
+
+    overlay.querySelector('.il-close').addEventListener('click', chiudi);
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) chiudi(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('aperto')) chiudi();
+    });
+    overlay.querySelector('#il-copia').addEventListener('click', function () {
+      if (correnti) copia(correnti.testo);
+    });
+    overlay.querySelector('#il-txt').addEventListener('click', function () {
+      if (correnti) scarica(correnti.testo, correnti.nomeFile);
+    });
+  }
+
+  function mostraEsito(t) {
+    if (!esito) return;
+    esito.textContent = t;
+    clearTimeout(esito._t);
+    esito._t = setTimeout(function () { esito.textContent = ''; }, 2600);
+  }
+
+  function copia(testo) {
+    function ripiego() {
+      var ta = document.createElement('textarea');
+      ta.value = testo;
+      ta.style.cssText = 'position:fixed;left:-9999px;top:0;';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      mostraEsito(ok ? 'Copiato negli appunti' : 'Copia non riuscita');
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(testo)
+        .then(function () { mostraEsito('Copiato negli appunti'); })
+        .catch(ripiego);
+    } else { ripiego(); }
+  }
+
+  function scarica(testo, nomeFile) {
+    try {
+      var blob = new Blob([testo], { type: 'text/plain;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = nomeFile;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+      mostraEsito('Scaricato ' + nomeFile);
+    } catch (e) {
+      mostraEsito('Scaricamento non riuscito');
+    }
+  }
+
+  function chiudi() {
+    if (overlay) overlay.classList.remove('aperto');
+    correnti = null;
+  }
+  window.chiudiInfoCollegamento = chiudi;
+
+  window.mostraInfoCollegamento = function (link, from, to) {
+    if (!link) return;
+    costruisci();
+
+    var a = String(link.fromName || (from && from.name) || link.from || 'N/D').replace(/\s*\n\s*/g, ' / ');
+    var z = String(link.toName || (to && to.name) || link.to || 'N/D').replace(/\s*\n\s*/g, ' / ');
+    var rotta = a + ' \u27F6 ' + z;
+    var c = campiUtili(link);
+
+    overlay.querySelector('#il-titolo').textContent = 'Scheda collegamento';
+    var db = overlay.querySelector('#il-db');
+    var info = dbDelLink(link);
+    db.className = 'rp-db-badge ' + info.classe;
+    db.textContent = info.nome;
+    overlay.querySelector('#il-idcoll').textContent = link._originalId || link.id || 'senza id';
+    overlay.querySelector('#il-rotta').textContent = rotta;
+
+    var nodoA = anagrafica(link.from || (from && from.clli), link.TipoSedeA, from, info.codice);
+    var nodoZ = anagrafica(link.to || (to && to.clli), link.TipoSedeZ, to, info.codice);
+
+    var schede = '';
+
+    // una scheda per ogni gruppo di campi del collegamento
+    GRUPPI.forEach(function (g) {
+      var presenti = g[1].filter(function (k) {
+        return Object.prototype.hasOwnProperty.call(link, k) && !campoNascosto(link, k);
+      });
+      if (!presenti.length) return;
+      azzeraZebra();
+      var corpoScheda = '';
+      presenti.forEach(function (k) {
+        if (k === 'stato') { corpoScheda += rigaStato(link[k]); return; }
+        corpoScheda += riga(etichetta(k), valore(link, k), MONO.indexOf(k) >= 0);
+      });
+      schede += scheda(g[0], g[2] || '', corpoScheda);
+    });
+
+    if (c.altri.length) {
+      azzeraZebra();
+      var altriHtml = '';
+      c.altri.forEach(function (k) {
+        altriHtml += riga(etichetta(k), link[k], MONO.indexOf(k) >= 0);
+      });
+      schede += scheda('Altri campi', 'g-altri', altriHtml);
+    }
+
+    var banda = schedeBanda(link, CAMPI_BANDA);
+    schede += banda.strette;
+
+    // Le due schede delle centrali sono le piu' alte e vanno per ultime: nel
+    // flusso a colonne le schede basse riempiono prima le colonne di sinistra e
+    // il riquadro resta alto quanto la scheda piu' alta, senza buchi in mezzo.
+    schede += schedaNodo('Centrale A', 'g-anag-a', link, CAMPI_A, nodoA);
+    schede += schedaNodo('Centrale Z', 'g-anag-z', link, CAMPI_Z, nodoZ);
+
+    var html = '<div class="il-schede">' + schede + '</div>' +
+               (banda.larghe ? '<div class="il-schede-larghe">' + banda.larghe + '</div>' : '');
+
+    corpo.innerHTML = html;
+    corpo.scrollTop = 0;
+    sistemaRighe(corpo);
+
+    var nCavi = link.IdCavo ? pezzi(link.IdCavo).length : 0;
+    var nCampi = c.usati.filter(function (k) { return !vuoto(link[k]); }).length + c.altri.length;
+    overlay.querySelector('#il-riepilogo').textContent =
+      nCampi + ' campi valorizzati' + (nCavi ? '  \u2022  ' + nCavi + ' C-FOS' : '');
+
+    var idPulito = String(link._originalId || link.id || 'collegamento')
+                     .replace(/[^A-Za-z0-9._-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 80);
+    correnti = {
+      testo: testoPiano(link, nodoA, nodoZ, rotta, info.nome),
+      nomeFile: 'NAT_collegamento_' + (idPulito || 'senza_id') + '.txt'
+    };
+
+    if (esito) esito.textContent = '';
+    overlay.classList.add('aperto');
+    // ripasso a finestra aperta: le larghezze definitive si conoscono solo ora
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(function () { sistemaRighe(corpo); });
+    }
+  };
 })();
 </script>
 
