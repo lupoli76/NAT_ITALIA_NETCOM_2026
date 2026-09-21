@@ -3,7 +3,7 @@
 <!--
 ╔═════════════════════════════════════════════════════════════════════════════════╗
 ║                        NAT ITALIA - INDICE DEL FILE                             ║
-║                        Rev. 26.09.01 - Struttura Organizzata                    ║
+║                        Rev. 26.09.21 - Struttura Organizzata                    ║
 ╠═════════════════════════════════════════════════════════════════════════════════╣
 ║                                                                                 ║
 ║  📋 INDICE SEZIONI (per ricerca veloce usare Ctrl+F):                           ║
@@ -24,9 +24,12 @@
 ║  │ [CSS-011] Rifiniture grafiche             → cerca: [CSS-011]               │ ║
 ║  │ [CSS-012] Stato collegamento nelle liste  → cerca: [CSS-012]               │ ║
 ║  │ [CSS-013] Scheda info del collegamento    → cerca: [CSS-013]               │ ║
+║  │ [CSS-014] Selettore sfondi della mappa    → cerca: [CSS-014]               │ ║
 ║  │ [JS-011] Ricerca Indirizzo comprimibile   → cerca: [JS-011]                │ ║
 ║  │ [JS-012] Pastiglia stato collegamento     → cerca: [JS-012]                │ ║
 ║  │ [JS-013] Scheda info del collegamento     → cerca: [JS-013]                │ ║
+║  │ [JS-014] Sfondi della mappa               → cerca: [JS-014]                │ ║
+║  │ [JS-015] Palette linee in base allo sfondo → cerca: [JS-015]               │ ║
 ║  ├────────────────────────────────────────────────────────────────────────────┤ ║
 ║  │ [JS-001] Toast System                     → cerca: [JS-001]                │ ║
 ║  │ [JS-002] Responsive Layout                → cerca: [JS-002]                │ ║
@@ -4991,6 +4994,41 @@ body:not(.dark-mode) .ripple-effect {
 }
 /* fine [CSS-011] */
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   [CSS-014] SELETTORE DEGLI SFONDI DELLA MAPPA
+   Il controllo sta in basso a sinistra. L'angolo era libero, ma lo alzo un po'
+   per non appoggiarlo al bordo e per restare lontano dall'attribuzione di
+   Leaflet, che su finestre strette puo' allungarsi verso sinistra.
+   ══════════════════════════════════════════════════════════════════════════════ */
+.leaflet-bottom.leaflet-left .leaflet-control-layers {
+  margin-left: 10px;
+  margin-bottom: 26px;
+}
+.leaflet-control-layers {
+  border-radius: 6px;
+  border: 1px solid #c4ccda;
+  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.18);
+  background: #f7f9fc;
+}
+.leaflet-control-layers-toggle {
+  border-radius: 6px;
+}
+.leaflet-control-layers-expanded {
+  padding: 8px 12px 8px 8px;
+  font-size: 12px;
+  color: #1d2939;
+}
+.leaflet-control-layers-expanded label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 3px 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+/* fine [CSS-014] */
+
+
 
 /* ══════════════════════════════════════════════════════════════════════════════
    [CSS-013] SCHEDA TECNICA DEL COLLEGAMENTO
@@ -5815,7 +5853,7 @@ body:not(.dark-mode) .ripple-effect {
   <!-- Inizio Footer di Progetto -->
 <div class="project-info" style="font-size: 0.85em; text-align: center; color: #555555;">
     <div>
-        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev26.09.01 • SENZA Accesso • 01/09/2026]
+        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev26.09.21 • SENZA PW Accesso • 21/09/2026]
     </div>
 
     <div style="margin-top: 3px;">
@@ -33928,10 +33966,151 @@ window.vistaItalia = function() {
         // ═════════════════════════════════════════════════════════
       }).setView([41.887094, 12.549129], 10);
 
-      L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-        maxZoom: 20,
-        attribution: '&copy; Openstreetmap France | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      // ═════════════════════════════════════════════════════════════════════
+      // [JS-014] SFONDI DELLA MAPPA
+      // Quattro sfondi selezionabili al posto di uno solo. Si parte dallo
+      // Stradale Esri: lo stile OSM France usato prima e' pensato per un
+      // pubblico francofono e scrive Milan e Turin al posto di Milano e Torino.
+      // I tile ufficiali della OSM Foundation non sono un'alternativa: da un
+      // file aperto in locale il browser non manda nessun Referer e la loro
+      // tile usage policy risponde 403.
+      // La scelta viene ricordata sotto la chiave croSfondoMappa, la stessa di
+      // CRO ITALIA: se i due file finiscono sullo stesso dominio, vale per
+      // tutti e due.
+      // ═════════════════════════════════════════════════════════════════════
+      // ATTENZIONE sui due livelli Google: mt1.google.com/vt e' l'endpoint
+      // interno del client web di Google Maps, non un'API pubblica. I Service
+      // Specific Terms del Google Maps Platform vietano di usare contenuti
+      // Google dentro una mappa non Google, e Leaflet e' una mappa non Google.
+      // Sono qui per scelta esplicita: possono smettere di funzionare da un
+      // giorno all'altro senza preavviso. Per toglierli bastano queste due voci
+      // piu' il cambio di SFONDO_PREDEFINITO.
+      const SFONDI_MAPPA = {
+        'Google Maps (Stradale)': L.tileLayer(
+          'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            referrerPolicy: 'strict-origin-when-cross-origin',
+            attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+          }),
+        'Google Maps (Satellite Ibrido)': L.tileLayer(
+          'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            referrerPolicy: 'strict-origin-when-cross-origin',
+            attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+          }),
+        'Stradale (Esri)': L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            referrerPolicy: 'strict-origin-when-cross-origin',
+            attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom'
+          }),
+        'Topografica (Esri)': L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            referrerPolicy: 'strict-origin-when-cross-origin',
+            attribution: 'Tiles &copy; Esri'
+          }),
+        'Satellite (Esri)': L.tileLayer(
+          'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            referrerPolicy: 'strict-origin-when-cross-origin',
+            attribution: 'Tiles &copy; Esri &mdash; Esri, Maxar, Earthstar Geographics'
+          }),
+        // Il percorso stradale tratteggiato arriva da OSRM, che calcola sulle
+        // strade di OpenStreetMap. Google ed Esri disegnano le strade da rilievi
+        // propri, che differiscono di qualche metro: a zoom di via il tracciato
+        // sembra correre accanto alla strada invece che sopra. Su questo sfondo,
+        // disegnato con gli stessi dati OSM, il tratteggio cade sulla strada.
+        // Stesso server di OSM France che funzionava gia' da file locale, ma
+        // stile Humanitarian invece di osmfr, quello che scriveva Milan e Turin.
+        'OpenStreetMap (HOT)': L.tileLayer(
+          'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+            subdomains: 'abc',
+            maxZoom: 19,
+            referrerPolicy: 'strict-origin-when-cross-origin',
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles style by <a href="https://www.hotosm.org/" target="_blank">Humanitarian OpenStreetMap Team</a> hosted by <a href="https://openstreetmap.fr/" target="_blank">OpenStreetMap France</a>'
+          })
+      };
+
+      const SFONDO_PREDEFINITO = 'Google Maps (Stradale)';
+      const CHIAVE_SFONDO = 'croSfondoMappa';
+
+      let sfondoSalvato = null;
+      try {
+        sfondoSalvato = window.localStorage.getItem(CHIAVE_SFONDO);
+      } catch (e) {
+        sfondoSalvato = null;
+      }
+      const sfondoIniziale = (sfondoSalvato && SFONDI_MAPPA[sfondoSalvato])
+        ? sfondoSalvato
+        : SFONDO_PREDEFINITO;
+      SFONDI_MAPPA[sfondoIniziale].addTo(map);
+
+      L.control.layers(SFONDI_MAPPA, null, {
+        position: 'bottomleft',
+        collapsed: true
       }).addTo(map);
+
+      // Lo sfondo attivo serve anche altrove: sul satellite le linee della
+      // selezione hanno bisogno di una palette piu' accesa e di un contorno.
+      window.SFONDO_ATTIVO = sfondoIniziale;
+      // Vale per qualunque sfondo fotografico, Esri o ibrido Google: su
+      // ortofoto le linee hanno bisogno della palette accesa e del contorno.
+      window.sfondoSatellite = function () {
+        return /satellite|ibrido/i.test(window.SFONDO_ATTIVO || '');
+      };
+
+      // ═════════════════════════════════════════════════════════════════════
+      // [JS-015] PALETTE DELLE LINEE IN BASE ALLO SFONDO
+      // Sulle ortofoto il blu, il rosso e il viola pieni spariscono dentro il
+      // verde della vegetazione e il grigio dell'urbano. Stessi colori, ma
+      // accesi, linee piu' spesse e un contorno scuro sotto quelle selezionate:
+      // il contorno e' quello che le rende leggibili su qualunque terreno.
+      // Il percorso stradale passa dal rosso scuro a un giallo-lime, che sul
+      // satellite non si confonde con la linea d'aria rossa del DB RC.
+      // ═════════════════════════════════════════════════════════════════════
+      window.paletteMappa = function () {
+        if (window.sfondoSatellite && window.sfondoSatellite()) {
+          // Selezionato e non selezionato non bastava distinguerli per
+          // opacita': sul satellite restavano due turchesi quasi uguali. Il
+          // non selezionato usa una tinta scura e desaturata della stessa
+          // famiglia, il selezionato la versione accesa piu' il contorno.
+          return {
+            satellite: true,
+            ra: '#00E5FF', rc: '#FF1744', merged: '#E040FB',
+            raSpento: '#13527A', rcSpento: '#7F1020', mergedSpento: '#4A1A6B',
+            stradale: '#D8FF00',
+            contorno: '#0B1020', contornoPeso: 7, contornoOpacita: 0.85,
+            pesoSelezionato: 4.5, opacitaSelezionato: 1,
+            pesoNormale: 1.2, opacitaNormale: 0.55
+          };
+        }
+        return {
+          satellite: false,
+          ra: '#0000ff', rc: '#ff0000', merged: '#7d00ff',
+          raSpento: '#0000ff', rcSpento: '#ff0000', mergedSpento: '#7d00ff',
+          stradale: '#8B0000',
+          contorno: null, contornoPeso: 0, contornoOpacita: 0,
+          pesoSelezionato: 3, opacitaSelezionato: 0.9,
+          pesoNormale: 1, opacitaNormale: 0.3
+        };
+      };
+
+      map.on('baselayerchange', function (e) {
+        try {
+          if (e && e.name) {
+            window.localStorage.setItem(CHIAVE_SFONDO, e.name);
+          }
+        } catch (err) {}
+        if (e && e.name) window.SFONDO_ATTIVO = e.name;
+        // Ridisegno con la palette giusta per il nuovo sfondo
+        try {
+          if (typeof window.drawLinks === 'function') window.drawLinks();
+          if (typeof window.ridisegnaPercorsiStradali === 'function') {
+            window.ridisegnaPercorsiStradali();
+          }
+        } catch (err) {}
+      });
 
       // Inizializzo strumenti aggiuntivi sulla mappa (ricerca indirizzi)
       setupGeocodingTools(map);
@@ -34274,6 +34453,22 @@ function clearAllMapElements() {
     if (typeof manuallyClosedTooltips !== 'undefined' && manuallyClosedTooltips instanceof Set) {
       manuallyClosedTooltips.clear();
     }
+    // Contorni scuri delle linee selezionate (sfondo satellite)
+    if (window.linkContornoLayers && window.linkContornoLayers.length) {
+      window.linkContornoLayers.forEach(function (l) {
+        try { mapRef.removeLayer(l); } catch (e2) {}
+      });
+      window.linkContornoLayers = [];
+      removedCount++;
+    }
+
+    // Filtri "Select", quelli che mostrano solo gli elementi selezionati:
+    // senza azzerarli le liste resterebbero vuote dopo la pulizia e sembrerebbe
+    // che il tool si sia bloccato
+    if (typeof window.azzeraFiltriSelezione === 'function') {
+      window.azzeraFiltriSelezione();
+    }
+
     // Aggiorna la mappa per riflettere le selezioni cancellate
     if (typeof window.drawLinks === 'function') {
       window.drawLinks();
@@ -34281,6 +34476,19 @@ function clearAllMapElements() {
     // Ridisegna i marker dei nodi (per rimuovere colori FLUO)
     if (typeof window.drawMarkers === 'function') {
       window.drawMarkers();
+    }
+    // Ricostruisce le due liste e i contatori: le spunte e il riepilogo
+    // "Selezione Attuale" devono tornare a zero insieme alla mappa
+    try {
+      if (typeof window.buildLinksList === 'function') window.buildLinksList('');
+      if (typeof window.buildNodesList === 'function') window.buildNodesList('');
+      if (typeof window.updateTotals === 'function') window.updateTotals();
+      const selCount = document.getElementById('sel-count');
+      const selDist = document.getElementById('sel-distance');
+      if (selCount) selCount.textContent = '0';
+      if (selDist) selDist.textContent = '0,00';
+    } catch (e2) {
+      console.warn('[ClearAll] Impossibile ricostruire le liste', e2);
     }
   } catch (e) {
     console.warn('[ClearAll] Impossibile cancellare selezioni', e);
@@ -35666,6 +35874,14 @@ function drawLinks() {
     linkLayers.forEach(l => map.removeLayer(l));
     linkLayers.clear();
 
+    // Tolgo anche i contorni scuri delle linee selezionate
+    if (window.linkContornoLayers) {
+      window.linkContornoLayers.forEach(function (l) {
+        try { map.removeLayer(l); } catch (e) {}
+      });
+    }
+    window.linkContornoLayers = [];
+
     LINKS.forEach(link => {
       const from = nodesById.get(link.from_id || link.from);
       const to = nodesById.get(link.to_id || link.to);
@@ -35681,26 +35897,50 @@ function drawLinks() {
 
       const isSelected = selectedIds.has(link.id);
 
-      // LOGICA COLORE: colore unico per tutti i collegamenti in base al DB attivo
+      // LOGICA COLORE: colore unico per tutti i collegamenti in base al DB attivo.
+      // La tinta esatta dipende dallo sfondo: sul satellite serve piu' acceso.
       const currentDB = window.DB_STATE ? window.DB_STATE.currentDB : 'DB1';
+      const tavolozza = (typeof window.paletteMappa === 'function')
+        ? window.paletteMappa()
+        : { ra: '#0000ff', rc: '#ff0000', merged: '#7d00ff',
+            raSpento: '#0000ff', rcSpento: '#ff0000', mergedSpento: '#7d00ff',
+            contorno: null, contornoPeso: 0, contornoOpacita: 0,
+            pesoSelezionato: 3, opacitaSelezionato: 0.9,
+            pesoNormale: 1, opacitaNormale: 0.3 };
       let color;
       if (currentDB === 'DB2') {
         // DB RA
-        color = '#0000ff';
+        color = isSelected ? tavolozza.ra : tavolozza.raSpento;
       } else if (currentDB === 'MERGED') {
         // DB RA+RC (DB unico)
-        color = '#7d00ff';
+        color = isSelected ? tavolozza.merged : tavolozza.mergedSpento;
       } else {
         // DB RC (DB1 o default)
-        color = '#ff0000';
+        color = isSelected ? tavolozza.rc : tavolozza.rcSpento;
+      }
+
+      // Contorno scuro sotto le sole linee selezionate: sono poche e sono
+      // quelle che devono restare leggibili su qualunque terreno.
+      if (isSelected && tavolozza.contorno) {
+        const contorno = L.polyline(
+          [[from.lat, from.lon], [to.lat, to.lon]],
+          {
+            color: tavolozza.contorno,
+            weight: tavolozza.contornoPeso,
+            opacity: tavolozza.contornoOpacita,
+            interactive: false
+          }
+        ).addTo(map);
+        if (!window.linkContornoLayers) window.linkContornoLayers = [];
+        window.linkContornoLayers.push(contorno);
       }
 
       const polyline = L.polyline(
         [[from.lat, from.lon], [to.lat, to.lon]],
         {
           color: color,
-          weight: isSelected ? 3 : 1,
-          opacity: isSelected ? 0.9 : 0.3
+          weight: isSelected ? tavolozza.pesoSelezionato : tavolozza.pesoNormale,
+          opacity: isSelected ? tavolozza.opacitaSelezionato : tavolozza.opacitaNormale
         }
       ).addTo(map);
 
@@ -35831,12 +36071,33 @@ function drawLinks() {
       function drawRoadPolyline(coords) {
         if (!selectedIds.has(linkId)) return; // nel frattempo deselezionato
         if (window.linkRoadRouteLayers.has(linkId)) return;
-        const roadLayer = L.polyline(coords, {
-          color:     '#8B0000',
-          weight:    3,
-          opacity:   0.70,
+        const tav = (typeof window.paletteMappa === 'function')
+          ? window.paletteMappa()
+          : { stradale: '#8B0000', contorno: null, contornoPeso: 0, contornoOpacita: 0 };
+
+        // Sul satellite il tratteggio va contornato, altrimenti i trattini si
+        // perdono fra i campi chiari
+        // Le polilinee vanno dentro un gruppo e il gruppo va sulla mappa: se le
+        // aggiungo una per una, togliere il gruppo non le toglie e il
+        // tratteggio resta li' anche dopo l'azzeramento della selezione.
+        const pezzi = [];
+        if (tav.contorno) {
+          pezzi.push(L.polyline(coords, {
+            color:     tav.contorno,
+            weight:    6,
+            opacity:   tav.contornoOpacita,
+            dashArray: '10,7',
+            interactive: false
+          }));
+        }
+        pezzi.push(L.polyline(coords, {
+          color:     tav.stradale,
+          weight:    tav.satellite ? 3.5 : 3,
+          opacity:   tav.satellite ? 1 : 0.70,
           dashArray: '10,7'
-        }).addTo(map);
+        }));
+
+        const roadLayer = L.layerGroup(pezzi).addTo(map);
         // Porta la linea d'aria in primo piano rispetto al percorso stradale
         const airLayer = linkLayers.get(linkId);
         if (airLayer) airLayer.bringToFront();
@@ -35876,6 +36137,17 @@ function drawLinks() {
     });
   }
   window.syncLinkRoadRoutes = syncLinkRoadRoutes;
+
+  // Al cambio di sfondo i percorsi stradali gia' disegnati vanno rifatti con la
+  // nuova palette. Le coordinate sono in cache, quindi non si richiama OSRM.
+  window.ridisegnaPercorsiStradali = function () {
+    if (!window.linkRoadRouteLayers) return;
+    window.linkRoadRouteLayers.forEach(function (layer) {
+      try { map.removeLayer(layer); } catch (e) {}
+    });
+    window.linkRoadRouteLayers.clear();
+    syncLinkRoadRoutes();
+  };
 
   // 📌 Funzione per mostrare/nascondere tutti i tooltip degli elementi selezionati
   function updateAllTooltips() {
@@ -36774,6 +37046,16 @@ div.addEventListener('click', function() {
     }
     // ✅ Esponi buildLinksList globalmente
     window.buildLinksList = buildLinksList;
+    window.buildNodesList = buildNodesList;
+    // Serve al bottone X: le due variabili vivono in questo ambito e da fuori
+    // non si raggiungono
+    window.azzeraFiltriSelezione = function () {
+      showOnlySelectedLinks = false;
+      showOnlySelectedNodes = false;
+    };
+    window.updateTotals = function () {
+      try { updateTotals(); } catch (e) {}
+    };
 
     function updateTotals() {
       let sum = 0;
@@ -223131,15 +223413,9 @@ const roadRoute = L.polyline(coords, {
       <p><strong>NAT (National Topography) Italia</strong> è uno strumento professionale di visualizzazione, analisi e gestione delle reti nazionali italiane di telecomunicazioni DWDM. Progettato per ingegneri, tecnici e manager che operano nell'ambito delle infrastrutture di rete backbone (RC) e access (RA).</p>
 
       <div class="guide-highlight">
-        <p><strong>🆕 NOVITÀ VERSIONE Rev26.09.01 (01/09/2026):</strong><br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• Filtro Area: il bottone NORD è stato diviso in <strong>NORD OVEST</strong> e <strong>NORD EST</strong>. NORD OVEST raccoglie PV (Piemonte, V.Aosta), LO | MILO (Lombardia) e LI (Liguria); NORD EST raccoglie NE (Trentino, Veneto, Friuli) e ER (Emilia Romagna)<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• La divisione avviene al momento del filtro e della visualizzazione, leggendo la zona di ogni elemento. Il database non viene toccato: nelle tabelle di origine l'area resta NORD<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• Le righe delle liste mostrano la macro-area suddivisa, coerente con i bottoni del filtro<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• Un elemento del nord con una zona non prevista fra quelle sopra resta visibile finché almeno uno dei due bottoni è acceso, così nessun dato può sparire per una zona nuova<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• Correzione dati: nel collegamento <strong>MILO_arco_1064 | MILO_355 | ALO082 | 5</strong> e nel nodo corrispondente, i campi di destinazione contenevano due sedi accorpate (TAINO e ANGERA, SECAITAE e SECAITAF). Restano ANGERA e SECAITAF; IdCavo lasciato invariato<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Aggiornamento database del 04/09/2026</strong>. DB RA: 433 collegamenti cambiano stato (285 da DA VERIFICARE SU NNI ad ATTIVO, 59 a IN ATTIVAZIONE, 37 da ATTIVO a DA VERIFICARE SU NNI, 24 da IN ATTIVAZIONE ad ATTIVO, 15 da IN ATTIVAZIONE a DA VERIFICARE SU NNI, 8 a IN CESSAZIONE, 3 a IN REINSTRADAMENTO, 2 da IN ATTIVAZIONE a IN CESSAZIONE); rimosso il collegamento DOGLIANI - GALLO GRINZANE (PV_arco_1022 | PV_118 | APV006 | 3) e rinumerati i progressivi successivi dell'arco; corretti IdCavo e distanza del collegamento SESTO CALENDE - ANGERA<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• DB RC: aggiornata a 04/09/2026 la nota sui dati C-FOS di 758 collegamenti, 45 note di stato SubPath, 22 cambi di stato, una distanza e due IdCavo. Centrali e nodi invariati in entrambi i database<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• Conteggi aggiornati: DB RA passa da 4058 a 4057 centrali e da 6652 a 6651 collegamenti. Le date in fondo alla colonna passano a 04/09/2026 per entrambi i database<br/>
+        <p><strong>🆕 NOVITÀ VERSIONE Rev26.09.21 (21/09/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Nuova revisione Rev26.09.21</strong>. La variante senza accesso si chiama ora <strong>SENZA PW Accesso</strong>. Questa voce raccoglie le modifiche fatte dopo l'aggiornamento del database del 04/09/2026, mentre la numerazione era rimasta ferma a Rev26.09.01<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Guida aggiornata</strong>: sezione Sfondi della Mappa riscritta per le sei cartografie, con l'ordine del selettore, lo sfondo di partenza, la memoria della scelta, una tabella pratica su quale sfondo usare per cosa, i colori della selezione sui due sfondi fotografici e l'elenco degli sfondi OpenStreetMap provati e scartati con il motivo<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Stato del collegamento nella lista</strong>: accanto alla distanza compare una pastiglia con pallino colorato e il testo dello stato, sia nel formato DB RA sia in quello DB RC. Verde per ATTIVO, IN REINSTRADAMENTO, IN VARIAZIONE e ATTIVO &gt; SATURO; rosso per NON ATTIVO e IN ATTIVAZIONE; ambra per IN CESSAZIONE e DA VERIFICARE SU NNI; grigio per uno stato non previsto<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Il colore non è mai l'unica informazione: il testo dello stato resta scritto dentro la pastiglia, così resta leggibile anche stampando in bianco e nero. Dalla console si può scrivere <strong>NAT_STATO_TERZO = 'blu'</strong> per usare il blu al posto dell'ambra<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• La pastiglia dello stato non va più a capo: colonna di sinistra da 450 a 500 px e pastiglia più compatta (carattere da 10 a 9, margini e pallino ridotti). Misurato su tutti i collegamenti di RA e RC, nessuna riga manda più la pastiglia sulla riga successiva<br/>
@@ -223168,6 +223444,30 @@ const roadRoute = L.polyline(coords, {
         &nbsp;&nbsp;&nbsp;&nbsp;• Le colonne delle schede non sono più un numero fisso ma hanno una larghezza minima di 340 px: il browser ne mette quante ne stanno, così nessuna scheda diventa tanto stretta da costringere gli identificativi del DB RA a spezzarsi<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Il controllo conta le righe di testo davvero occupate invece di stimarle dall'altezza: con il corpo del carattere ridotto due righe possono misurare meno di due interlinee ereditate, e qualche caso passava inosservato<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Guida aggiornata</strong>: nuova legenda degli stati con le tre famiglie di colore e il significato di ciascuno stato, macro-aree portate a quattro in tutti i punti in cui erano citate, nuova voce "5b. Scheda Collegamento" nella sezione Come Usare, descrizione delle sezioni comprimibili e del bottone IT, e nota sugli Id cavo inclusi nella copia dal suggerimento sulla mappa<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Quattro sfondi di mappa selezionabili</strong> dal comando in basso a sinistra, al posto dell'unico sfondo precedente: Stradale Esri (quello di partenza), Topografica Esri, OpenStreetMap servito da osm.ch, Satellite Esri. Lo sfondo OSM France usato prima è pensato per un pubblico francofono e scriveva Milan e Turin al posto di Milano e Torino; i tile ufficiali della OSM Foundation non sono un'alternativa perché da un file aperto in locale il browser non manda nessun Referer e la loro tile usage policy risponde 403<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• La scelta dello sfondo resta memorizzata nel browser sotto la chiave <strong>croSfondoMappa</strong>, la stessa usata da CRO ITALIA: se i due file finiscono sullo stesso dominio, la scelta vale per tutti e due. Su ogni livello è impostato referrerPolicy strict-origin-when-cross-origin, che in locale non serve ma vale quando il tool gira da web<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Selezione leggibile sullo sfondo Satellite</strong>: le linee dei collegamenti mantengono il blu per il DB RA, il rosso per il DB RC e il viola per l'unificato, ma su ortofoto passano a tinte accese (#00B0FF, #FF1744, #C24BFF), diventano più spesse e ricevono un contorno scuro sotto quelle selezionate, che è quello che le rende leggibili su verde, beige e grigio urbano<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Il percorso stradale tratteggiato passa dal rosso scuro a un giallo-lime (#D8FF00) quando è attivo il satellite, così non si confonde più con la linea d'aria rossa del DB RC, e anche lui riceve il contorno scuro<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Sugli altri tre sfondi i colori restano quelli di sempre. Il cambio di sfondo ridisegna da solo linee e percorsi stradali, senza richiamare OSRM perché le coordinate sono già in cache<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Corretto il tratteggio del percorso stradale che restava sulla mappa dopo l'azzeramento della selezione: le due polilinee del tracciato, quella colorata e il suo contorno, venivano aggiunte alla mappa una per una e poi raccolte in un gruppo che non era mai stato aggiunto, quindi togliere il gruppo non toglieva niente<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Sullo sfondo Satellite i collegamenti non selezionati usano ora una tinta scura e desaturata della stessa famiglia (#13527A per il DB RA, #7F1020 per il DB RC, #4A1A6B per l'unificato), mentre i selezionati usano la versione accesa più il contorno: prima si distinguevano solo per opacità e sul turchese e sul viola erano quasi indistinguibili<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Il bottone <strong>X</strong> di pulizia della mappa azzera ora anche i contorni delle linee selezionate, disattiva i filtri "mostra solo selezionati" e ricostruisce le due liste e il riepilogo "Selezione Attuale", che prima restavano con le spunte e i conteggi vecchi<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Guida aggiornata</strong>: rifatta la voce del bottone ❌ con l'elenco completo di quello che toglie dalla mappa e di quello che azzera nella colonna di sinistra, e aggiunta una voce nella Panoramica sul percorso stradale tratteggiato dei collegamenti selezionati e sul suo colore diverso a seconda dello sfondo<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Aggiunti al selettore due sfondi <strong>Google Maps</strong>, Stradale e Satellite Ibrido, entrambi fino allo zoom 20. Non arrivano da un'API pubblica ma dall'endpoint interno del client web di Google Maps: i termini del Google Maps Platform vietano di usare contenuti Google dentro una mappa non Google, quindi possono smettere di funzionare senza preavviso. Sono stati aggiunti su richiesta esplicita e per toglierli basta cancellare due voci nel blocco [JS-014]<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• La palette accesa con il contorno scuro si attiva ora anche sull'ibrido Google, non solo sul Satellite Esri: il riconoscimento dello sfondo fotografico guarda sia "satellite" sia "ibrido" nel nome<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Selettore degli sfondi riordinato: i due Google per primi, poi i tre Esri. Lo sfondo predefinito passa da Stradale Esri a <strong>Google Maps (Stradale)</strong>, e la scelta continua a restare memorizzata nel browser sotto la chiave croSfondoMappa<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Rimosso lo sfondo OpenStreetMap servito da osm.ch: quel percorso ha <em>switzerland</em> nell'indirizzo e sull'Italia non caricava<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Aggiunto lo sfondo <strong>OpenStreetMap (HOT)</strong>, servito da OSM France nello stile Humanitarian. Il percorso stradale tratteggiato viene calcolato da OSRM sulle strade di OpenStreetMap, mentre Google ed Esri disegnano le strade da rilievi propri che differiscono di qualche metro: a zoom di via il tracciato sembrava correre accanto alla strada. Su questo sfondo, disegnato con gli stessi dati del calcolo, il tratteggio cade sulla strada<br/><br/>
+
+        <p><strong>🆕 NOVITÀ VERSIONE Rev26.09.01 (01/09/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Filtro Area: il bottone NORD è stato diviso in <strong>NORD OVEST</strong> e <strong>NORD EST</strong>. NORD OVEST raccoglie PV (Piemonte, V.Aosta), LO | MILO (Lombardia) e LI (Liguria); NORD EST raccoglie NE (Trentino, Veneto, Friuli) e ER (Emilia Romagna)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• La divisione avviene al momento del filtro e della visualizzazione, leggendo la zona di ogni elemento. Il database non viene toccato: nelle tabelle di origine l'area resta NORD<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Le righe delle liste mostrano la macro-area suddivisa, coerente con i bottoni del filtro<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Un elemento del nord con una zona non prevista fra quelle sopra resta visibile finché almeno uno dei due bottoni è acceso, così nessun dato può sparire per una zona nuova<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Correzione dati: nel collegamento <strong>MILO_arco_1064 | MILO_355 | ALO082 | 5</strong> e nel nodo corrispondente, i campi di destinazione contenevano due sedi accorpate (TAINO e ANGERA, SECAITAE e SECAITAF). Restano ANGERA e SECAITAF; IdCavo lasciato invariato<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Aggiornamento database del 04/09/2026</strong>. DB RA: 433 collegamenti cambiano stato (285 da DA VERIFICARE SU NNI ad ATTIVO, 59 a IN ATTIVAZIONE, 37 da ATTIVO a DA VERIFICARE SU NNI, 24 da IN ATTIVAZIONE ad ATTIVO, 15 da IN ATTIVAZIONE a DA VERIFICARE SU NNI, 8 a IN CESSAZIONE, 3 a IN REINSTRADAMENTO, 2 da IN ATTIVAZIONE a IN CESSAZIONE); rimosso il collegamento DOGLIANI - GALLO GRINZANE (PV_arco_1022 | PV_118 | APV006 | 3) e rinumerati i progressivi successivi dell'arco; corretti IdCavo e distanza del collegamento SESTO CALENDE - ANGERA<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• DB RC: aggiornata a 04/09/2026 la nota sui dati C-FOS di 758 collegamenti, 45 note di stato SubPath, 22 cambi di stato, una distanza e due IdCavo. Centrali e nodi invariati in entrambi i database<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Conteggi aggiornati: DB RA passa da 4058 a 4057 centrali e da 6652 a 6651 collegamenti. Le date in fondo alla colonna passano a 04/09/2026 per entrambi i database<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Nuova numerazione delle revisioni: da Rev22.38 si passa a <strong>Rev26.09.01</strong><br/><br/>
 
         <p><strong>🆕 NOVITÀ VERSIONE Rev22.38 (25/08/2026):</strong><br/>
@@ -223659,6 +223959,65 @@ const roadRoute = L.polyline(coords, {
 
       <p><strong>Stati presenti oggi nei due database:</strong> nel DB RC si trovano ATTIVO, NON ATTIVO, IN ATTIVAZIONE, IN REINSTRADAMENTO e ATTIVO &gt; SATURO; nel DB RA ATTIVO, DA VERIFICARE SU NNI, IN ATTIVAZIONE, IN CESSAZIONE e IN REINSTRADAMENTO.</p>
 
+      <h4>🗺️ Sfondi della Mappa</h4>
+      <p>Il comando con l'icona dei livelli, in basso a sinistra della mappa, permette di scegliere fra <strong>sei cartografie</strong>. All'apertura parte <strong>Google Maps (Stradale)</strong>. Lo sfondo scelto viene ricordato dal browser e ripristinato alla riapertura del tool; se lo sfondo ricordato non esiste pi&ugrave;, si riparte da Google Maps (Stradale) invece di restare senza mappa.</p>
+      <p>La scelta viene salvata sotto la chiave <code>croSfondoMappa</code>, la stessa usata da CRO ITALIA: se i due tool vengono aperti dallo stesso indirizzo web, lo sfondo scelto in uno vale anche nell'altro.</p>
+
+      <div class="feature-card">
+        <h5>Le sei cartografie, nell'ordine del selettore</h5>
+        <ul>
+          <li><strong>Google Maps (Stradale)</strong> &mdash; quella di partenza. Cartografia stradale di Google, toponimi in italiano, fino allo zoom 20.</li>
+          <li><strong>Google Maps (Satellite Ibrido)</strong> &mdash; ortofoto Google con sopra nomi di strade e localit&agrave;, fino allo zoom 20.</li>
+          <li><strong>Stradale (Esri)</strong> &mdash; alternativa stradale, fino allo zoom 19.</li>
+          <li><strong>Topografica (Esri)</strong> &mdash; rilievo, curve di livello e idrografia, fino allo zoom 19.</li>
+          <li><strong>Satellite (Esri)</strong> &mdash; ortofoto Esri senza nomi, fino allo zoom 19.</li>
+          <li><strong>OpenStreetMap (HOT)</strong> &mdash; la cartografia di OpenStreetMap nello stile Humanitarian, servita da OpenStreetMap France, fino allo zoom 19.</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <h5>Quale sfondo usare per cosa</h5>
+        <ul>
+          <li><strong>Lavoro quotidiano, ricerca di sedi e indirizzi:</strong> Google Maps (Stradale).</li>
+          <li><strong>Riconoscere un edificio, un armadio o l'accesso a una sede:</strong> Google Maps (Satellite Ibrido), che ha anche i nomi delle strade, oppure Satellite (Esri) quando le foto Google di quella zona sono vecchie o poco nitide.</li>
+          <li><strong>Valutare il terreno lungo una tratta:</strong> Topografica (Esri), con rilievo e corsi d'acqua.</li>
+          <li><strong>Controllare il percorso stradale tratteggiato contro le strade:</strong> OpenStreetMap (HOT). &Egrave; l'unico sfondo disegnato con gli stessi dati usati per calcolare il percorso, quindi l'unico su cui il tratteggio cade esattamente sulla strada.</li>
+        </ul>
+      </div>
+
+      <div class="feature-card">
+        <h5>Perch&eacute; il tratteggio stradale non sta sempre sulla strada</h5>
+        <p>Il percorso stradale tratteggiato viene calcolato da OSRM sulle strade di <strong>OpenStreetMap</strong>, con la geometria completa e non semplificata. Google ed Esri invece disegnano le strade da rilievi propri, fatti con fonti e anni diversi. Le due versioni della stessa strada differiscono di qualche metro, e a zoom di via qualche metro diventa una distanza ben visibile: il tratteggio sembra correre accanto alla strada invece che sopra, o tagliare un tornante.</p>
+        <p>Non &egrave; un errore del calcolo e non si corregge dal tool: sono due mappe diverse della stessa strada. Per controllare il tracciato basta passare a <strong>OpenStreetMap (HOT)</strong>.</p>
+        <p>Il calcolo usa la rete pedonale di OpenStreetMap, che ignora i sensi unici, come un cavo che corre sotto la strada senza badare al senso di marcia, ma comprende anche sentieri e carrarecce. Qualche deviazione breve che su Google sembra passare fuori strada &egrave; in realt&agrave; un tratto di sentiero o di pista che Google non disegna e che su OpenStreetMap (HOT) si vede.</p>
+      </div>
+
+      <div class="feature-card">
+        <h5>Colori della selezione sugli sfondi fotografici</h5>
+        <p>Sulle ortofoto il blu, il rosso e il viola pieni spariscono dentro il verde della vegetazione e il grigio dell'urbano. Su <strong>Google Maps (Satellite Ibrido)</strong> e su <strong>Satellite (Esri)</strong> il tool cambia da solo la tinta delle linee: restano il blu per il DB RA, il rosso per il DB RC e il viola per l'unificato, ma il <strong>collegamento selezionato</strong> usa la versione accesa (#00E5FF, #FF1744, #E040FB), spessore 4,5 e un contorno scuro sotto, mentre i <strong>non selezionati</strong> usano una tinta scura e desaturata della stessa famiglia (#13527A, #7F1020, #4A1A6B) a spessore 1,2. Il contorno &egrave; quello che rende leggibile la selezione su qualunque terreno, dal bosco scuro ai campi chiari.</p>
+        <p>Sugli stessi due sfondi il percorso stradale tratteggiato passa dal rosso scuro a un giallo-lime (#D8FF00), anche lui con il contorno, cos&igrave; non si confonde con la linea d'aria rossa del DB RC.</p>
+        <p>Sugli altri quattro sfondi i colori restano quelli di sempre. Cambiando sfondo, linee e percorsi stradali vengono ridisegnati da soli, senza ricalcolare il percorso: le coordinate sono gi&agrave; in memoria.</p>
+      </div>
+
+      <div class="guide-warning">
+        <p><strong>⚠️ Sui due sfondi Google:</strong> non arrivano da un'API pubblica ma dall'endpoint interno del client web di Google Maps. I termini del Google Maps Platform vietano di usare contenuti Google dentro una mappa non Google, e Leaflet lo &egrave;. In pratica significa che possono smettere di funzionare da un giorno all'altro senza preavviso: se restano grigi, non &egrave; un guasto del tool, basta scegliere un altro sfondo. La via regolare sarebbe la Map Tiles API di Google, che richiede una chiave e un progetto con fatturazione attiva.</p>
+      </div>
+
+      <div class="guide-warning">
+        <p><strong>⚠️ Sfondi OpenStreetMap provati e scartati:</strong> i tile ufficiali di openstreetmap.org rispondono 403 a un file aperto in locale, perch&eacute; la loro tile usage policy richiede un Referer che il browser in quel caso non manda. Lo stile <em>osmfr</em> di OpenStreetMap France funzionava, ma usa i nomi francesi dove esistono e scriveva <em>Milan</em> al posto di Milano e <em>Turin</em> al posto di Torino. Il server osm.ch copre solo la Svizzera e sull'Italia restava vuoto. OpenStreetMap (HOT) usa lo stesso server di OpenStreetMap France, ma con lo stile Humanitarian al posto di osmfr.</p>
+      </div>
+
+      <h4>🛣️ Percorso Stradale dei Collegamenti Selezionati</h4>
+      <p>Quando selezioni un collegamento, oltre alla linea d'aria che unisce le due centrali compare un <strong>tracciato tratteggiato</strong> che segue le strade fra i due punti. Serve a capire quanto il percorso reale si discosta dalla linea retta.</p>
+      <div class="feature-card">
+        <h5>Come si legge</h5>
+        <p>La linea continua &egrave; la linea d'aria e porta il colore del database attivo. Il tratteggio &egrave; il percorso stradale: rosso scuro sugli sfondi cartografici, <strong>giallo-lime</strong> sullo sfondo Satellite, dove il rosso scuro si confondeva con la linea d'aria del DB RC.</p>
+        <p>La distanza mostrata nelle liste e nella scheda resta sempre quella dichiarata dal database: il tracciato stradale &egrave; solo grafico e non modifica nessun dato.</p>
+      </div>
+      <div class="guide-tip">
+        <p><strong>💡 Sparisce insieme alla selezione:</strong> deselezionando il collegamento, o premendo il bottone ❌, il tratteggio viene tolto dalla mappa insieme al suo contorno. Il tracciato resta in memoria, quindi riselezionando lo stesso collegamento ricompare senza richiedere di nuovo il calcolo del percorso.</p>
+      </div>
+
       <h4>🗃️ Sezioni Comprimibili e Comandi della Mappa</h4>
       <div class="feature-card">
         <h5>Sezioni che si aprono e si chiudono</h5>
@@ -223689,7 +224048,7 @@ const roadRoute = L.polyline(coords, {
       <ul>
         <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript vanilla (no framework pesanti per massime performance)</li>
         <li><strong>Mapping:</strong> Leaflet.js v1.9.4 - libreria open-source leader per mappe web interattive</li>
-        <li><strong>Tiles:</strong> OpenStreetMap - cartografia collaborativa globale</li>
+        <li><strong>Tiles:</strong> sei sfondi selezionabili dal comando in basso a sinistra della mappa &mdash; Google Maps Stradale (predefinito), Google Maps Satellite Ibrido, Stradale Esri, Topografica Esri, Satellite Esri, OpenStreetMap HOT. La scelta resta memorizzata nel browser</li>
         <li><strong>Routing:</strong> OSRM - routing engine ottimizzato per prestazioni</li>
         <li><strong>Geocoding:</strong> Nominatim (OSM) - geocoding open-source affidabile</li>
         <li><strong>Calcoli Geometrici:</strong> Algoritmo Haversine per distanze geodetiche</li>
@@ -224663,15 +225022,22 @@ const roadRoute = L.polyline(coords, {
 
       <div class="feature-card">
         <h5>❌ Cancella Tutto dalla Mappa</h5>
-        <p><strong>Funzione:</strong> Rimuove TUTTI gli elementi aggiunti manualmente alla mappa<br/>
-        <strong>Elementi Rimossi:</strong><br/>
-        • Marker geocodifica (ricerca indirizzo/coordinate)<br/>
-        • Layer centrali vicine (marker cliente + centrali)<br/>
-        • Misure e linee di misura<br/>
+        <p><strong>Funzione:</strong> riporta il tool allo stato iniziale, sia sulla mappa sia nella colonna di sinistra.</p>
+        <p><strong>Sulla mappa rimuove:</strong><br/>
+        • Marker della ricerca indirizzo e delle coordinate<br/>
+        • Layer delle centrali vicine, marker cliente compreso<br/>
+        • Misure e linee del righello<br/>
         • Percorsi CRO visualizzati<br/>
-        • Marker tracker<br/>
-        • <strong>Selezioni nodi e collegamenti</strong> (tutte le selezioni vengono azzerate)<br/>
-        <strong>Risultato:</strong> Mappa completamente pulita e pronta per nuove operazioni</p>
+        • Marker e tracciato del tracker<br/>
+        • Percorsi stradali tratteggiati dei collegamenti selezionati, contorno compreso<br/>
+        • Contorni scuri delle linee selezionate, quelli che compaiono sullo sfondo Satellite</p>
+        <p><strong>Nella colonna di sinistra azzera:</strong><br/>
+        • Selezione dei collegamenti e delle centrali<br/>
+        • Spunte nelle due liste<br/>
+        • Filtri <strong>Select</strong>, quelli che mostrano solo gli elementi selezionati: senza spegnerli le liste resterebbero vuote dopo la pulizia e sembrerebbe che il tool si sia bloccato<br/>
+        • Riepilogo "Selezione Attuale", che torna a 0 collegamenti e 0,00 km<br/>
+        • Etichette CLLI sulla mappa e suggerimenti aperti</p>
+        <p><strong>Risultato:</strong> mappa e liste pulite, pronte per una nuova ricerca.</p>
       </div>
 
       <h4>⚡ 8. Pulsanti Azione Rapida</h4>
