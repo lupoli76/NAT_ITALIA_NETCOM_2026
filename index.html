@@ -5896,7 +5896,7 @@ body:not(.dark-mode) .ripple-effect {
 // DECODIFICA CROPACK 1 (database compattati). Rimonta NODES, LINKS, DB2_NODES e
 // DB2_LINKS come array di oggetti con le stesse chiavi, nello stesso ordine, e
 // gli stessi valori (testo e numeri). I blocchi fra i marcatori INIZIO DB NAT e
-// FINE DB NAT si rigenerano con la pagina "Convertitore CRONAT".
+// FINE DB NAT si rigenerano con la pagina "CRONAT Database Manager".
 // ══════════════════════════════════════════════════════════════════════════════
 function __croUnpackDB(p) {
   var t0 = (typeof performance !== 'undefined') ? performance.now() : Date.now();
@@ -5931,7 +5931,7 @@ function __croUnpackDB(p) {
 // Formato: { name, clli, lat, lon, Zona, RC/RA/etc... }
 // ══════════════════════════════════════════════════════════════════════════════
 // >>> INIZIO DB NAT RC (CROPACK 1: chiavi una volta, valori in colonna, dizionario per colonna)
-//     Generato dal Convertitore DB CRO il 01/10/2026 da: DB CRO del 01/10/2026 (stessi dati del NAT Rev26.09.21, senza i 10 doppioni di DB2_NODES)
+//     Generato con CRONAT Database Manager il 01/10/2026 da: DB CRO del 01/10/2026 (stessi dati del NAT Rev26.09.21, senza i 10 doppioni di DB2_NODES)
 //     NODES: 809 record | LINKS: 1205 record
 //     Le centrali sono ricavate dai collegamenti. Per aggiornare: rigenera questo blocco con il Convertitore, non modificarlo a mano.
 window.NODES = __croUnpackDB({v:1,db:"NAT NODES",n:809,
@@ -11712,7 +11712,7 @@ function switchDatabase(dbType) {
 // ══════════════════════════════════════════════════════════════════════
 
 // >>> INIZIO DB NAT RA (CROPACK 1: chiavi una volta, valori in colonna, dizionario per colonna)
-//     Generato dal Convertitore DB CRO il 01/10/2026 da: DB CRO del 01/10/2026 (stessi dati del NAT Rev26.09.21, senza i 10 doppioni di DB2_NODES)
+//     Generato con CRONAT Database Manager il 01/10/2026 da: DB CRO del 01/10/2026 (stessi dati del NAT Rev26.09.21, senza i 10 doppioni di DB2_NODES)
 //     DB2_NODES: 5077 record | DB2_LINKS: 6642 record
 //     Le centrali sono ricavate dai collegamenti. Per aggiornare: rigenera questo blocco con il Convertitore, non modificarlo a mano.
 window.DB2_NODES = __croUnpackDB({v:1,db:"NAT DB2_NODES",n:5077,
@@ -12025,7 +12025,7 @@ const roadRoute = L.polyline(coords, {
         <p><strong>🆕 NOVITÀ (revisione da definire, 01/10/2026):</strong><br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Database in forma compatta</strong>: i quattro array (NODES, LINKS, DB2_NODES, DB2_LINKS) sono scritti con le chiavi una volta sola, i valori in colonna e un dizionario per le colonne con pochi valori distinti, nello stesso formato del CRO Italia. All'avvio la funzione <strong>__croUnpackDB</strong> li rimonta con le stesse chiavi e gli stessi valori, quindi il resto del tool non cambia. I dati scendono da 5,29 a circa 1,5 MB<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• <strong>DB2_NODES senza doppioni</strong>: tolte 10 righe ripetute della zona TO (Livorno, Massa, Peccioli, Pieve a Nievole, Pistoia S. Agostino, Pontedera Sud, S. Giuliano Terme, Stagno, Vaiano, Viareggio Au.), uguali in tutto a righe già presenti. Le righe scendono da 5.087 a 5.077 e il piè di pagina lo riporta<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Aggiornamento con il Convertitore CRONAT</strong>: lo stesso template Excel del CRO aggiorna anche il NAT. Il convertitore ricava i collegamenti dalle colonne del template, ricostruisce le centrali dai collegamenti, mostra le differenze rispetto ai dati in uso e aggiorna il piè di pagina: revisione e data, conteggi di centrali e link, date dei due database. I blocchi stanno fra i marcatori INIZIO DB NAT e FINE DB NAT<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Aggiornamento con il CRONAT Database Manager</strong>: lo stesso template Excel del CRO aggiorna anche il NAT. Il convertitore ricava i collegamenti dalle colonne del template, ricostruisce le centrali dai collegamenti, mostra le differenze rispetto ai dati in uso e aggiorna il piè di pagina: revisione e data, conteggi di centrali e link, date dei due database. I blocchi stanno fra i marcatori INIZIO DB NAT e FINE DB NAT<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Verificato: NODES, LINKS e DB2_LINKS identici a prima campo per campo e nello stesso ordine; DB2_NODES uguale a prima senza le 10 righe doppie<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Logo nella colonna di sinistra con sfondo trasparente</strong>: il riquadro bianco attorno al logo NAT non c'è più, il logo si appoggia sul colore del pannello. L'immagine è anche più leggera, da 80 KB a 8 KB<br/><br/>
         <p><strong>🆕 NOVITÀ VERSIONE Rev26.09.21 (21/09/2026):</strong><br/>
@@ -14089,9 +14089,9 @@ const roadRoute = L.polyline(coords, {
     <div class="guide-section" id="section-updatedb">
       <h3>💾 Procedura Aggiornamento Database</h3>
       <div class="guide-highlight">
-        <p><strong>🔄 Procedura attuale: Convertitore CRONAT</strong><br/>
+        <p><strong>🔄 Procedura attuale: CRONAT Database Manager</strong><br/>
         &nbsp;&nbsp;&nbsp;&nbsp;1. Aggiorna il template Excel <strong>CRO_DB_Template.xlsx</strong> (fogli <em>Collegamenti_RC</em> e <em>Collegamenti_RA</em>): è lo stesso del CRO Italia, un solo file per i due tool<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;2. Apri <strong>CRONAT_Convertitore_DB.html</strong> e trascinaci l'Excel insieme al file del NAT (e, se vuoi, anche a quello del CRO)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;2. Apri <strong>CRONAT_Database_Manager.html</strong> e trascinaci l'Excel insieme al file del NAT (e, se vuoi, anche a quello del CRO)<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;3. Nella scheda del NAT controlla le differenze dei link rispetto ai dati in uso, le <strong>date dei database</strong> e, se esce una nuova revisione, spunta <strong>Cambia la revisione</strong> (formato Rev26.10.01) con la sua data<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;4. Premi <strong>Scarica il NAT aggiornato</strong>: il convertitore sostituisce i blocchi fra i marcatori INIZIO DB NAT e FINE DB NAT, scrive nel piè di pagina date, conteggi di centrali e link e revisione, aggiorna la riga Rev. del riquadro in testa al file e ricontrolla tutto sul file risultante<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Le centrali non si compilano a parte: <strong>NODES</strong> (una per centrale RC) e <strong>DB2_NODES</strong> (una per coppia centrale + TipoSede RA, senza doppioni) sono ricavate dai collegamenti<br/>
