@@ -3,7 +3,7 @@
 <!--
 ╔═════════════════════════════════════════════════════════════════════════════════╗
 ║                        NAT ITALIA - INDICE DEL FILE                             ║
-║                        Rev. 26.09.21 - Struttura Organizzata                    ║
+║   Versione: 10.26 | 02  (rev. pubblicata: V10.26 | 02 | Ott 2026)               ║
 ╠═════════════════════════════════════════════════════════════════════════════════╣
 ║                                                                                 ║
 ║  📋 INDICE SEZIONI (per ricerca veloce usare Ctrl+F):                           ║
@@ -30,6 +30,9 @@
 ║  │ [JS-013] Scheda info del collegamento     → cerca: [JS-013]                │ ║
 ║  │ [JS-014] Sfondi della mappa               → cerca: [JS-014]                │ ║
 ║  │ [JS-015] Palette linee in base allo sfondo → cerca: [JS-015]               │ ║
+║  │ [CSS-015] Avviso librerie esterne         → cerca: [CSS-015]               │ ║
+║  │ [JS-016] NAT_DEBUG (console.log)           → cerca: [JS-016]               │ ║
+║  │ [JS-017] Avviso librerie esterne           → cerca: [JS-017]               │ ║
 ║  ├────────────────────────────────────────────────────────────────────────────┤ ║
 ║  │ [JS-001] Toast System                     → cerca: [JS-001]                │ ║
 ║  │ [JS-002] Responsive Layout                → cerca: [JS-002]                │ ║
@@ -4083,6 +4086,40 @@ body.sidebar-collapsed .sidebar .logo-wrapper {
      Fase 2 del restyling UI/UX
      ══════════════════════════════════════════════════════════════════════════════ -->
 <script>
+// ══════════════════════════════════════════════════════════════════════════════
+// [JS-016] NAT_DEBUG - INTERRUTTORE DEL console.log
+// V10.26 | 01 - Spento, console.log non scrive niente. console.error e
+// console.warn restano sempre attivi, perche' segnalano problemi veri.
+// Si accende in tre modi: natDebug(true) dalla console, ?debug=1 nell'indirizzo,
+// oppure localStorage NAT_DEBUG = '1'. La scelta fatta con natDebug() resta
+// memorizzata per le aperture successive.
+// ══════════════════════════════════════════════════════════════════════════════
+(function () {
+  'use strict';
+  var vero = console.log.bind(console);
+  var muto = function () {};
+
+  function acceso() {
+    try {
+      if (/[?&]debug=1/i.test(window.location.search)) return true;
+      if (window.localStorage.getItem('NAT_DEBUG') === '1') return true;
+    } catch (e) {}
+    return false;
+  }
+
+  window.NAT_DEBUG = acceso();
+  console.log = window.NAT_DEBUG ? vero : muto;
+
+  window.natDebug = function (on) {
+    on = (on !== false);
+    window.NAT_DEBUG = on;
+    console.log = on ? vero : muto;
+    try { window.localStorage.setItem('NAT_DEBUG', on ? '1' : '0'); } catch (e) {}
+    vero('[NAT] console.log ' + (on ? 'acceso' : 'spento'));
+    return on;
+  };
+})();
+
 (function() {
   'use strict';
   
@@ -5028,6 +5065,35 @@ body:not(.dark-mode) .ripple-effect {
 }
 /* fine [CSS-014] */
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   [CSS-015] AVVISO LIBRERIE ESTERNE MANCANTI
+   V10.26 | 01 - Striscia in cima alla pagina quando una libreria caricata da
+   internet non arriva. Prima la mappa restava bianca senza spiegazioni.
+   ══════════════════════════════════════════════════════════════════════════════ */
+#nat-avviso-cdn {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 20000;
+  background: #FDECEC; border-bottom: 2px solid #DC2626; color: #7A1010;
+  font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  font-size: 13px; line-height: 1.5; padding: 12px 46px 12px 16px;
+  box-shadow: 0 2px 10px rgba(16, 24, 40, 0.25);
+}
+#nat-avviso-cdn strong { color: #A31515; }
+#nat-avviso-cdn ul { margin: 6px 0 0; padding-left: 20px; }
+#nat-avviso-cdn li { margin: 2px 0; }
+#nat-avviso-cdn code {
+  background: #fff; border: 1px solid #F0B4B4; border-radius: 4px;
+  padding: 0 4px; font-size: 12px;
+}
+#nat-avviso-cdn .nat-avviso-chiudi {
+  position: absolute; top: 8px; right: 10px;
+  background: #fff; border: 1px solid #F0B4B4; color: #A31515;
+  border-radius: 6px; width: 26px; height: 24px; cursor: pointer;
+  font-size: 14px; font-weight: 700; line-height: 1;
+}
+#nat-avviso-cdn .nat-avviso-chiudi:hover { background: #FDECEC; }
+/* fine [CSS-015] */
+
+
 
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -5853,7 +5919,7 @@ body:not(.dark-mode) .ripple-effect {
   <!-- Inizio Footer di Progetto -->
 <div class="project-info" style="font-size: 0.85em; text-align: center; color: #555555;">
     <div>
-        <strong style="color: #555555;">[NAT] National Topography</strong> [Rev26.09.21 • SENZA PW Accesso • 21/09/2026]
+        <strong style="color: #555555;">[NAT] National Topography</strong> [V10.26 | 02 | Ott 2026 • 11/10/2026]
     </div>
 
     <div style="margin-top: 3px;">
@@ -5896,7 +5962,7 @@ body:not(.dark-mode) .ripple-effect {
 // DECODIFICA CROPACK 1 (database compattati). Rimonta NODES, LINKS, DB2_NODES e
 // DB2_LINKS come array di oggetti con le stesse chiavi, nello stesso ordine, e
 // gli stessi valori (testo e numeri). I blocchi fra i marcatori INIZIO DB NAT e
-// FINE DB NAT si rigenerano con la pagina "CRONAT Database Manager".
+// FINE DB NAT si rigenerano con CRONAT Database Manager.
 // ══════════════════════════════════════════════════════════════════════════════
 function __croUnpackDB(p) {
   var t0 = (typeof performance !== 'undefined') ? performance.now() : Date.now();
@@ -5931,7 +5997,7 @@ function __croUnpackDB(p) {
 // Formato: { name, clli, lat, lon, Zona, RC/RA/etc... }
 // ══════════════════════════════════════════════════════════════════════════════
 // >>> INIZIO DB NAT RC (CROPACK 1: chiavi una volta, valori in colonna, dizionario per colonna)
-//     Generato con CRONAT Database Manager il 01/10/2026 da: DB CRO del 01/10/2026 (stessi dati del NAT Rev26.09.21, senza i 10 doppioni di DB2_NODES)
+//     Generato con CRONAT Database Manager il 11/10/2026 da: DB del NAT V10.26 | 01 (stessi dati del CRO Italia del 01/10/2026), senza i 10 doppioni di DB2_NODES
 //     NODES: 809 record | LINKS: 1205 record
 //     Le centrali sono ricavate dai collegamenti. Per aggiornare: rigenera questo blocco con il Convertitore, non modificarlo a mano.
 window.NODES = __croUnpackDB({v:1,db:"NAT NODES",n:809,
@@ -11712,7 +11778,7 @@ function switchDatabase(dbType) {
 // ══════════════════════════════════════════════════════════════════════
 
 // >>> INIZIO DB NAT RA (CROPACK 1: chiavi una volta, valori in colonna, dizionario per colonna)
-//     Generato con CRONAT Database Manager il 01/10/2026 da: DB CRO del 01/10/2026 (stessi dati del NAT Rev26.09.21, senza i 10 doppioni di DB2_NODES)
+//     Generato con CRONAT Database Manager il 11/10/2026 da: DB del NAT V10.26 | 01 (stessi dati del CRO Italia del 01/10/2026), senza i 10 doppioni di DB2_NODES
 //     DB2_NODES: 5077 record | DB2_LINKS: 6642 record
 //     Le centrali sono ricavate dai collegamenti. Per aggiornare: rigenera questo blocco con il Convertitore, non modificarlo a mano.
 window.DB2_NODES = __croUnpackDB({v:1,db:"NAT DB2_NODES",n:5077,
@@ -12022,12 +12088,22 @@ const roadRoute = L.polyline(coords, {
       <p><strong>NAT (National Topography) Italia</strong> è uno strumento professionale di visualizzazione, analisi e gestione delle reti nazionali italiane di telecomunicazioni DWDM. Progettato per ingegneri, tecnici e manager che operano nell'ambito delle infrastrutture di rete backbone (RC) e access (RA).</p>
 
       <div class="guide-highlight">
-        <p><strong>🆕 NOVITÀ (revisione da definire, 01/10/2026):</strong><br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Database in forma compatta</strong>: i quattro array (NODES, LINKS, DB2_NODES, DB2_LINKS) sono scritti con le chiavi una volta sola, i valori in colonna e un dizionario per le colonne con pochi valori distinti, nello stesso formato del CRO Italia. All'avvio la funzione <strong>__croUnpackDB</strong> li rimonta con le stesse chiavi e gli stessi valori, quindi il resto del tool non cambia. I dati scendono da 5,29 a circa 1,5 MB<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>DB2_NODES senza doppioni</strong>: tolte 10 righe ripetute della zona TO (Livorno, Massa, Peccioli, Pieve a Nievole, Pistoia S. Agostino, Pontedera Sud, S. Giuliano Terme, Stagno, Vaiano, Viareggio Au.), uguali in tutto a righe già presenti. Le righe scendono da 5.087 a 5.077 e il piè di pagina lo riporta<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Aggiornamento con il CRONAT Database Manager</strong>: lo stesso template Excel del CRO aggiorna anche il NAT. Il convertitore ricava i collegamenti dalle colonne del template, ricostruisce le centrali dai collegamenti, mostra le differenze rispetto ai dati in uso e aggiorna il piè di pagina: revisione e data, conteggi di centrali e link, date dei due database. I blocchi stanno fra i marcatori INIZIO DB NAT e FINE DB NAT<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• Verificato: NODES, LINKS e DB2_LINKS identici a prima campo per campo e nello stesso ordine; DB2_NODES uguale a prima senza le 10 righe doppie<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Logo nella colonna di sinistra con sfondo trasparente</strong>: il riquadro bianco attorno al logo NAT non c'è più, il logo si appoggia sul colore del pannello. L'immagine è anche più leggera, da 80 KB a 8 KB<br/><br/>
+        <p><strong>🆕 NOVITÀ VERSIONE V10.26 | 02 | Ott 2026 (11/10/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Database di nuovo in forma compatta (CROPACK 1)</strong>: la V10.26 | 01 era ripartita da un NAT precedente e aveva i quattro array scritti per esteso. Ora NODES, LINKS, DB2_NODES e DB2_LINKS sono scritti con le chiavi una volta sola e i valori in colonna, fra i marcatori INIZIO DB NAT e FINE DB NAT; all'avvio <strong>__croUnpackDB</strong> li rimonta con le stesse chiavi e gli stessi valori. Il file scende da 6,39 a circa 2,5 MB e CRONAT Database Manager può di nuovo sostituire i database<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>DB2_NODES senza doppioni</strong>: tolte di nuovo le 10 righe ripetute della zona TO; le righe scendono da 5.087 a 5.077 e il piè di pagina lo riporta<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Logo della colonna di sinistra con sfondo trasparente</strong>, senza il riquadro bianco (immagine da 80 a 8 KB)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Guida</strong>: in testa a <em>Procedura Aggiornamento Database</em> c'è di nuovo la procedura con CRONAT Database Manager; quella con i file separati resta come riferimento storico<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Verificato: NODES, LINKS e DB2_LINKS identici alla V10.26 | 01 campo per campo e nello stesso ordine; DB2_NODES uguale senza le 10 righe doppie. Restano tutte le modifiche della V10.26 | 01 (forma della revisione, avvisi in linea, interruttore dei console.log, avviso sulle librerie CDN)<br/><br/>
+        <p><strong>🆕 NOVITÀ VERSIONE V10.26 | 01 | Ott 2026 (11/10/2026):</strong><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Nuova forma della revisione</strong>, allineata a CRO ITALIA: ai lati il mese e l'anno, al centro il numero di consegna, che riparte da 01 e cresce di uno a ogni consegna del mese. Il pi&egrave; di pagina passa da <code>[Rev26.09.21 • SENZA PW Accesso • 21/09/2026]</code> a <code>[V10.26 | 01 | Ott 2026 • 11/10/2026]</code>: la variante esce dalla targhetta e resta nel nome del file, <code>NAT_Italia_NoPW_Rev10_26_01.html</code>. Il riquadro ASCII in cima al file passa da <code>Rev. 26.09.21 - Struttura Organizzata</code> a <code>Versione: 10.26 | 01  (rev. pubblicata: V10.26 | 01 | Ott 2026)</code><br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>⚠️ Conseguenza per il CRONAT Database Manager:</strong> cercava <code>[Rev26.MM.NN • variante • data]</code> nel pi&egrave; di pagina e <code>Rev. 26.MM</code> nel riquadro ASCII. Con la forma nuova non trova pi&ugrave; nulla e smette di leggere e riscrivere la revisione del NAT: va aggiornato con le due stringhe nuove<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>[JS-016] NAT_DEBUG</strong>: interruttore unico in testa al primo blocco di script. Spento, <code>console.log</code> non scrive niente; <code>console.error</code> e <code>console.warn</code> restano sempre attivi. Si accende con <code>natDebug(true)</code> dalla console, con <code>?debug=1</code> nell'indirizzo o con <code>localStorage NAT_DEBUG = '1'</code>, e la scelta fatta con natDebug resta memorizzata. Nel file c'erano 40 console.log, 9 console.error e 35 console.warn: nessuna riga è stata tolta, sono solo silenziate quando l'interruttore è spento<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>[JS-017] e [CSS-015] Avviso librerie esterne</strong>: a pagina caricata il tool controlla che Leaflet sia arrivato, sia come codice sia come foglio di stile. Se manca qualcosa mostra in cima una striscia rossa con il sito bloccato e le funzioni che non andranno, invece di lasciare la mappa bianca senza spiegazioni. L'avviso si chiude con la X e il resto del tool, liste e filtri compresi, continua a funzionare. Il controllo del foglio di stile verifica che <code>.leaflet-pane</code> risulti in posizione assoluta, cosa che fa solo leaflet.css<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Correzione dello stesso avviso</strong>: il controllo sul foglio di stile di Leaflet rispondeva sempre "mancante", anche con il CSS regolarmente caricato, e la striscia rossa compariva a ogni apertura. Il campione veniva creato con <code>style="position:static"</code> e poi si guardava se la posizione risultava assoluta: lo stile scritto sull'elemento vince sempre sulla regola del foglio di stile, quindi la risposta era "static" per costruzione e l'avviso compariva anche a Leaflet caricato. Ora il campione non porta nessuna posizione scritta sull'elemento e come controprova, se il campione non si può creare, la presenza del tag &lt;link&gt;. Il controllo su <code>link.sheet</code> è stato scartato perché su file locale risulta valorizzato anche quando il foglio non è stato caricato. Provato nei quattro casi possibili: tutto caricato, solo CSS bloccato, solo codice bloccato, tutto bloccato<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Conferma in pagina</strong>: il bottone Elimina Tutti del pannello Percorsi CRO usava la finestra di conferma del browser. Ora usa il modale del tool, con Annulla e OK. Riga originale, da rimettere per tornare indietro: <code>if (!confirm('Eliminare tutti i percorsi CRO importati?')) return;</code>. Il corpo della funzione è passato in <code>window._clearAllCRORoutesEsegui</code>, che viene chiamata solo dopo l'OK; se il modale non fosse disponibile la funzione viene eseguita direttamente, come prima<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Niente alert() da convertire</strong>: nel file non ce n'erano. Le due occorrenze della parola erano un commento nel CSS dei toast e una riga della guida che racconta che i toast hanno sostituito gli alert nativi<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Percorsi pedonali precalcolati: valutati e lasciati stare.</strong> Il blocco CRO_PEDONALE del CRO (5.734 tratte, 1,92 MB) copre 6.630 collegamenti RA su 6.642 e 1.190 RC su 1.205, cioè 7.820 su 7.847, contando anche quelli ricostruibili concatenando le C-FOS dell'IdCavo. Le coordinate dei nodi coincidono con quelle del NAT fino alla sesta cifra decimale, un solo nodo differisce di 11 cm. Però il NAT chiama OSRM in quattro punti e i dati precalcolati coprono solo il primo, il tratteggio dei collegamenti selezionati: gli altri tre partono da un punto qualsiasi cliccato sulla mappa, per cui un percorso precalcolato non può esistere. Avere due meccanismi diversi per la stessa cosa non conveniva, quindi tutti e quattro restano in diretta su OSRM<br/><br/>
+
         <p><strong>🆕 NOVITÀ VERSIONE Rev26.09.21 (21/09/2026):</strong><br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Nuova revisione Rev26.09.21</strong>. La variante senza accesso si chiama ora <strong>SENZA PW Accesso</strong>. Questa voce raccoglie le modifiche fatte dopo l'aggiornamento del database del 04/09/2026, mentre la numerazione era rimasta ferma a Rev26.09.01<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• <strong>Guida aggiornata</strong>: sezione Sfondi della Mappa riscritta per le sei cartografie, con l'ordine del selettore, lo sfondo di partenza, la memoria della scelta, una tabella pratica su quale sfondo usare per cosa, i colori della selezione sui due sfondi fotografici e l'elenco degli sfondi OpenStreetMap provati e scartati con il motivo<br/>
@@ -12574,7 +12650,19 @@ const roadRoute = L.polyline(coords, {
 
       <p><strong>Stati presenti oggi nei due database:</strong> nel DB RC si trovano ATTIVO, NON ATTIVO, IN ATTIVAZIONE, IN REINSTRADAMENTO e ATTIVO &gt; SATURO; nel DB RA ATTIVO, DA VERIFICARE SU NNI, IN ATTIVAZIONE, IN CESSAZIONE e IN REINSTRADAMENTO.</p>
 
-      <h4>🗺️ Sfondi della Mappa</h4>
+      <h4>🔧 Quando qualcosa non funziona</h4>
+      <div class="feature-card">
+        <h5>La mappa resta bianca o sparpagliata</h5>
+        <p>Il tool è un file unico, ma la mappa arriva da internet: Leaflet viene scaricato da <code>unpkg.com</code> ogni volta che apri il file. Se la rete aziendale o il browser bloccano quell'indirizzo, in cima alla pagina compare una striscia rossa che dice quale pezzo manca e cosa smette di funzionare. Il resto del tool, liste, filtri, ricerca e schede, continua a funzionare senza mappa.</p>
+        <p>Mancano due pezzi distinti: il <strong>codice</strong> di Leaflet, senza il quale non c'è mappa, e il suo <strong>foglio di stile</strong>, senza il quale la mappa compare a pezzi sparsi perché tile, marker e comandi perdono la posizione.</p>
+      </div>
+      <div class="feature-card">
+        <h5>Messaggi di servizio nella console</h5>
+        <p>I messaggi informativi sono spenti, per non riempire la console durante l'uso normale. Errori e avvisi restano sempre visibili.</p>
+        <p>Per accenderli: apri la console con F12 e scrivi <code>natDebug(true)</code>, oppure aggiungi <code>?debug=1</code> in fondo all'indirizzo del file. La scelta fatta con <code>natDebug</code> resta memorizzata nel browser; <code>natDebug(false)</code> li rispegne.</p>
+      </div>
+
+            <h4>🗺️ Sfondi della Mappa</h4>
       <p>Il comando con l'icona dei livelli, in basso a sinistra della mappa, permette di scegliere fra <strong>sei cartografie</strong>. All'apertura parte <strong>Google Maps (Stradale)</strong>. Lo sfondo scelto viene ricordato dal browser e ripristinato alla riapertura del tool; se lo sfondo ricordato non esiste pi&ugrave;, si riparte da Google Maps (Stradale) invece di restare senza mappa.</p>
       <p>La scelta viene salvata sotto la chiave <code>croSfondoMappa</code>, la stessa usata da CRO ITALIA: se i due tool vengono aperti dallo stesso indirizzo web, lo sfondo scelto in uno vale anche nell'altro.</p>
 
@@ -12662,7 +12750,9 @@ const roadRoute = L.polyline(coords, {
       <h4>🔧 Tecnologie Utilizzate</h4>
       <ul>
         <li><strong>Frontend:</strong> HTML5, CSS3, JavaScript vanilla (no framework pesanti per massime performance)</li>
-        <li><strong>Mapping:</strong> Leaflet.js v1.9.4 - libreria open-source leader per mappe web interattive</li>
+        <li><strong>Mapping:</strong> Leaflet.js v1.9.4 - libreria open-source leader per mappe web interattive. &Egrave; l'unica libreria che il tool carica da internet: all'avvio viene controllata e, se non arriva, compare una striscia rossa in cima alla pagina invece della mappa bianca</li>
+        <li><strong>Messaggi di servizio:</strong> i <code>console.log</code> sono spenti. Per accenderli, <code>natDebug(true)</code> dalla console del browser oppure <code>?debug=1</code> in fondo all'indirizzo. Gli errori e gli avvisi restano sempre visibili</li>
+        <li><strong>Finestre di dialogo:</strong> tutte in pagina, nessuna finestra del browser</li>
         <li><strong>Tiles:</strong> sei sfondi selezionabili dal comando in basso a sinistra della mappa &mdash; Google Maps Stradale (predefinito), Google Maps Satellite Ibrido, Stradale Esri, Topografica Esri, Satellite Esri, OpenStreetMap HOT. La scelta resta memorizzata nel browser</li>
         <li><strong>Routing:</strong> OSRM - routing engine ottimizzato per prestazioni</li>
         <li><strong>Geocoding:</strong> Nominatim (OSM) - geocoding open-source affidabile</li>
@@ -14090,12 +14180,12 @@ const roadRoute = L.polyline(coords, {
       <h3>💾 Procedura Aggiornamento Database</h3>
       <div class="guide-highlight">
         <p><strong>🔄 Procedura attuale: CRONAT Database Manager</strong><br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;1. Aggiorna il template Excel <strong>CRO_DB_Template.xlsx</strong> (fogli <em>Collegamenti_RC</em> e <em>Collegamenti_RA</em>): è lo stesso del CRO Italia, un solo file per i due tool<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;2. Apri <strong>CRONAT_Database_Manager.html</strong> e trascinaci l'Excel insieme al file del NAT (e, se vuoi, anche a quello del CRO)<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;3. Nella scheda del NAT controlla le differenze dei link rispetto ai dati in uso, le <strong>date dei database</strong> e, se esce una nuova revisione, spunta <strong>Cambia la revisione</strong> (formato Rev26.10.01) con la sua data<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;4. Premi <strong>Scarica il NAT aggiornato</strong>: il convertitore sostituisce i blocchi fra i marcatori INIZIO DB NAT e FINE DB NAT, scrive nel piè di pagina date, conteggi di centrali e link e revisione, aggiorna la riga Rev. del riquadro in testa al file e ricontrolla tutto sul file risultante<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;1. Aggiorna il template Excel <strong>CRONAT_DB_Template</strong> (fogli <em>Collegamenti_RC</em> e <em>Collegamenti_RA</em>): è lo stesso del CRO Italia, un solo file per i tool<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;2. Apri <strong>CRONAT_Database_Manager.html</strong> e trascinaci l'Excel insieme al file del NAT (e, se vuoi, a quelli del CRO Italia e del CRO C-FOS)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;3. Nella scheda del NAT controlla le differenze dei link rispetto ai dati in uso, le <strong>date dei database</strong> e, se esce una nuova revisione, spunta <strong>Cambia la revisione</strong>: data della revisione e numero del mese (formato V10.26 | 02 | Ott 2026)<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;4. Premi <strong>Scarica il NAT aggiornato</strong>: CRONAT sostituisce i blocchi fra i marcatori INIZIO DB NAT e FINE DB NAT, scrive nel piè di pagina date, conteggi di centrali e link e revisione, aggiorna la riga Versione del riquadro in testa al file e ricontrolla tutto sul file risultante<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• Le centrali non si compilano a parte: <strong>NODES</strong> (una per centrale RC) e <strong>DB2_NODES</strong> (una per coppia centrale + TipoSede RA, senza doppioni) sono ricavate dai collegamenti<br/>
-        &nbsp;&nbsp;&nbsp;&nbsp;• Le celle del template sono in formato testo: le distanze vanno scritte come numeri o come testo con il punto (15.474), mai come testo con la virgola<br/>
+        &nbsp;&nbsp;&nbsp;&nbsp;• Le distanze vanno scritte come numeri o come testo con il punto (15.474), mai come testo con la virgola<br/>
         &nbsp;&nbsp;&nbsp;&nbsp;• La voce NOVITÀ della guida resta da scrivere a mano</p>
       </div>
       <p><em>La procedura che segue, con i file Excel separati per centrali e collegamenti e la conversione in JSON, è quella precedente e resta come riferimento storico.</em></p>
@@ -16967,8 +17057,22 @@ window.toggleAllCRORoutes = function(show) {
 
 // Elimina tutti i percorsi
 window.clearAllCRORoutes = function() {
-  if (!confirm('Eliminare tutti i percorsi CRO importati?')) return;
-  
+  // V10.26 | 01 - conferma in pagina al posto della finestra del browser.
+  // Riga originale, da rimettere per tornare indietro:
+  //   if (!confirm('Eliminare tutti i percorsi CRO importati?')) return;
+  if (typeof window.showAppConfirm === 'function') {
+    window.showAppConfirm(
+      'Eliminare tutti i percorsi CRO importati?',
+      function () { window._clearAllCRORoutesEsegui(); },
+      'Elimina percorsi CRO'
+    );
+    return;
+  }
+  // ripiego: se il modale non c'e', si esegue senza chiedere
+  window._clearAllCRORoutesEsegui();
+};
+
+window._clearAllCRORoutesEsegui = function() {
   localStorage.removeItem(window.CRO_NAT_STORAGE_KEY);
   window.croRoutesData = null;
   window.croRouteVisibility = {};
@@ -19672,6 +19776,102 @@ window.pastigliaStato = function(v) {
     }
   };
 })();
+
+// ══════════════════════════════════════════════════════════════════════════════
+// [JS-017] AVVISO LIBRERIE ESTERNE MANCANTI
+// V10.26 | 01 - A pagina caricata controlla che Leaflet sia arrivato, sia come
+// codice sia come foglio di stile. Se manca qualcosa mostra in cima una striscia
+// con il sito bloccato e le funzioni che non andranno, invece di lasciare la
+// mappa bianca senza una ragione visibile.
+// ══════════════════════════════════════════════════════════════════════════════
+(function () {
+  'use strict';
+
+  var LIBRERIE = [
+    {
+      nome: 'Leaflet (codice)',
+      sito: 'unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+      serve: 'la mappa, i marker delle centrali, le linee dei collegamenti, i percorsi stradali e tutti i comandi sulla mappa',
+      presente: function () { return typeof window.L !== 'undefined' && typeof window.L.map === 'function'; }
+    },
+    {
+      nome: 'Leaflet (foglio di stile)',
+      sito: 'unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+      serve: 'la posizione corretta di tile, marker e comandi: senza, la mappa si vede a pezzi sparsi',
+      presente: function () {
+        // Due prove, basta che una dica di si'.
+        //
+        // CORREZIONE V10.26 | 01: la prima versione di questo controllo creava
+        // il campione con style="position:static" e poi guardava se la posizione
+        // risultava assoluta. Lo stile scritto sull'elemento vince sempre sulla
+        // regola del foglio di stile, quindi la risposta era "static" anche con
+        // il CSS caricato e l'avviso compariva sempre. Riga originale:
+        //   p.style.cssText = 'position:static;visibility:hidden;';
+        //
+        // 1) prova sulla regola: leaflet.css mette .leaflet-pane in posizione
+        //    assoluta. Il campione non porta nessuna posizione scritta
+        //    sull'elemento, altrimenti coprirebbe la regola del foglio.
+        try {
+          var p = document.createElement('div');
+          p.className = 'leaflet-pane';
+          p.setAttribute('style', 'visibility:hidden;width:0;height:0;');
+          document.body.appendChild(p);
+          var pos = window.getComputedStyle(p).position;
+          document.body.removeChild(p);
+          return pos === 'absolute';
+        } catch (e) {}
+
+        // 2) se la prova non si e' potuta fare, guardo almeno se il tag <link>
+        //    esiste. Nota: non basta controllare link.sheet, che su file locale
+        //    risulta valorizzato anche quando il foglio non e' stato caricato.
+        try {
+          return !!document.querySelector('link[rel="stylesheet"][href*="leaflet"]');
+        } catch (e) {
+          return true;   // nel dubbio non allarmo
+        }
+      }
+    }
+  ];
+
+  function controlla() {
+    var mancanti = [];
+    LIBRERIE.forEach(function (lib) {
+      var ok = false;
+      try { ok = lib.presente(); } catch (e) { ok = false; }
+      if (!ok) mancanti.push(lib);
+    });
+    if (!mancanti.length) return;
+
+    console.error('[NAT] Librerie esterne non caricate:',
+                  mancanti.map(function (l) { return l.nome; }).join(', '));
+
+    var box = document.createElement('div');
+    box.id = 'nat-avviso-cdn';
+    box.setAttribute('role', 'alert');
+    var html = '<strong>\u26A0\uFE0F ' + (mancanti.length === 1
+        ? 'Una libreria esterna non si \u00e8 caricata'
+        : mancanti.length + ' librerie esterne non si sono caricate') + '.</strong> ' +
+      'Il tool \u00e8 un file unico ma la mappa arriva da internet: se la rete aziendale o il browser bloccano l\'indirizzo, questa parte non funziona. ' +
+      'Il resto del tool, liste e filtri compresi, continua a funzionare.<ul>';
+    mancanti.forEach(function (l) {
+      html += '<li><strong>' + l.nome + '</strong> da <code>' + l.sito + '</code><br/>Senza di essa non funziona: ' + l.serve + '</li>';
+    });
+    html += '</ul>';
+    box.innerHTML = html +
+      '<button type="button" class="nat-avviso-chiudi" title="Chiudi l\'avviso">&#10005;</button>';
+    document.body.appendChild(box);
+    box.querySelector('.nat-avviso-chiudi').addEventListener('click', function () {
+      box.remove();
+    });
+  }
+
+  if (document.readyState === 'complete') {
+    setTimeout(controlla, 0);
+  } else {
+    window.addEventListener('load', function () { setTimeout(controlla, 0); });
+  }
+})();
+
 </script>
 
 </body>
